@@ -1,0 +1,2 @@
+npm i bcrypt cookie-parser express jsonwebtoken mongoose validator
+npm i --save-dev @types/cookie-parser @types/validator @types/bcrypt @types/jsonwebtoken
