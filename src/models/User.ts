@@ -1,9 +1,11 @@
 // User model for MongoDB
 
+// Module imports
 import mongoose from 'mongoose'
 import validator from 'validator'
 import bcrypt from 'bcrypt'
 
+// Define schema
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -19,17 +21,16 @@ const userSchema = new mongoose.Schema({
   }
 })
 
-
 // Hash the password before saving a new User to the DB
-userSchema.pre('save', async (next) => {
+userSchema.pre('save', async function (this: any, next) {
   const salt = await bcrypt.genSalt();
-  (<any>this).password = await bcrypt.hash((<any>this).password, salt)
+  this.password = await bcrypt.hash(this.password, salt)
   next()
 })
 
-// Add a static login function to this model
-userSchema.statics.login = async (email, password) => {
-  const user = await (<any>this).findOne({ email })
+// Add a static login function to the schema
+userSchema.statics.login = async function (this: any, email, password) {
+  const user = await this.findOne({ email })
   if (user) {
     const auth = await bcrypt.compare(password, user.password)
     if (auth) {

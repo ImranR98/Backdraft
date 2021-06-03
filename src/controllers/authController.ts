@@ -1,5 +1,6 @@
 // Authentication request handlers
 
+// Module imports
 import User from '../models/User'
 import jwt from 'jsonwebtoken'
 import express from 'express'
@@ -22,6 +23,7 @@ const signup = async (req: express.Request, res: express.Response) => {
         res.status(201).json({ user: user._id })
     }
     catch (err) {
+        console.log(err)
         res.status(400).send(err)
     }
 }

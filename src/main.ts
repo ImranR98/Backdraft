@@ -3,7 +3,6 @@
 // Module imports
 import express from 'express'
 import mongoose from 'mongoose'
-import cookieParser from 'cookie-parser'
 import path from 'path'
 import authRoutes from './routes/authRoutes'
 import exampleRoutes from './routes/exampleRoutes'
@@ -13,13 +12,12 @@ import { checkUser } from './middleware/authMiddleware'
 const app: express.Application = express()
 app.use(express.json())
 app.use(express.static(path.join(__dirname, '/../../client-dist')))
-app.use(cookieParser());
 
 // Connect to DB and start server
 const dbURI = 'mongodb://localhost:27017/auth'
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }).then((result) =>
     app.listen(process.env.PORT || 8080, () => console.log(`Express server launched (port ${process.env.PORT || 8080})`))
-).catch((err) => console.log(err));
+).catch((err) => console.log(err))
 
 // Always add user data from the JWT, if any, to the current request
 app.use(checkUser)
