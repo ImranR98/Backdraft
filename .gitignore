@@ -1,0 +1,9 @@
+# Dependencies
+/node_modules
+
+# Compiled Output
+/dist
+
+# IDE - VSCode
+.vscode/*
+.history/*
