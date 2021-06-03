@@ -1,7 +1,7 @@
 // User model for MongoDB
 
 import mongoose from 'mongoose'
-import isEmail from 'validator'
+import validator from 'validator'
 import bcrypt from 'bcrypt'
 
 const userSchema = new mongoose.Schema({
@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Email not provided.'],
     unique: true,
     lowercase: true,
-    validate: [isEmail, 'Email is invalid.']
+    validate: [validator.isEmail, 'Email is invalid.']
   },
   password: {
     type: String,
