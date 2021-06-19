@@ -1,10 +1,11 @@
 // Various helper functions that don't fit elsewhere
 
-import { mongo } from "mongoose"
+import { mongo } from 'mongoose'
 
-const standardizeIfMongoError = (err: any) => {
+const modifyError = (err: any) => {
+    console.log(err)
+    if (typeof err === 'string') return err
     if (err instanceof mongo.MongoError) {
-        console.log(err)
         let message = 'Something went wrong.'
         if (err.code === 11000) {
             if ((<any>err).keyValue instanceof Object)
@@ -12,7 +13,9 @@ const standardizeIfMongoError = (err: any) => {
                 else message = 'This is a duplicate entry.'
         }
         return message
-    } else return err
+    }
+    if (err instanceof Error) return err.message
+    return err
 }
 
-export default standardizeIfMongoError
+export default modifyError

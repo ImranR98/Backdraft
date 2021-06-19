@@ -19,7 +19,7 @@ const decodeToken = (token: string | undefined) => {
     if (token) {
       jwt.verify(token, 'superduperhiddensecretmysteriousencryptedcryptocode', (err: VerifyErrors | null, decodedToken: object | undefined) => {
         if (err) {
-          reject()
+          reject(err)
         } else {
           resolve(decodedToken)
         }
