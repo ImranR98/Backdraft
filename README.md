@@ -4,7 +4,7 @@ Most web service backends require at least a basic authentication system.
 
 In the past, I have wasted time writing auth code for each new project. Most of it was written in a hurry and was half baked, with several issues such as using regular JWTs with ridiculously long expiration times, instead of refresh tokens.
 
-This is my attempt at creating a barebones backend that features simple but well built authentication, that can be used as a starting point for future projects.
+This is my attempt at creating a barebones backend that features simple but well built (and maybe more importantly, well documented) authentication, that can be used as a starting point for future projects.
 
 End goals:
 - An API that lets users sign up with email (email verification may be added later, but it is a pain and not my main focus).
