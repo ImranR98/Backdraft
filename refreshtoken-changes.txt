@@ -1,0 +1,33 @@
+- User logs in, gets token + refreshtoken:
+	- Unlike the token, all refreshtokens are stored in the user table.
+	- Along with some info about the request (device, IP, when the refreshtoken was last used, etc.)
+- User uses token to make requests
+- If a request is made with an expired token:
+	- User can request a new token using the refreshtoken, then use the new one.
+	- If the refreshtoken is invalid, user gets 401.
+- If a logged in user wants, they can take a look at their refreshtokens (not the tokens themselves, but some associated data such as device or IP) and choose to revoke the token.
+
+Changes needed:
+1. Take a look at the req object and see what data about the client is available to associate with a refreshtoken.
+2. If needed, force the client to send extra info about itself on login, such as the user agent and device (reject logins without this info) for use with the above.
+3. Decide on the exact info that will be stored with each refreshtoken.
+4. Add a new property to the User schema, in which refreshtokens and associated info can be stored.
+5. Create a /token endpoint that accepts a refresh token and issues a new token.
+6. Test that the above system works:
+	1. Log in and take note of the provided token and refresh token.
+	2. Attempt to access a protected route without the token. This should return a 401.
+	3. Try again with an invalid (modified) token. This should also return a 401.
+	4. Attempt to access a protected route with the token before it expires. This should work.
+	5. Wait for the token to expire and try again. This should return a 401.
+	6. Attempt to request a new token without providing a refreshtoken. This should return a 401.
+	7. Try again with an invalid (modified) refreshtoken. This should also return a 401.
+	8. Attempt to request a new token using the provided refreshtoken. This should return a new token.
+	9. Repeat steps 4 and 5 with the new token.
+7. Create a protected /logins endpoint that returns info about existing refreshtokens.
+8. Create a protected /revokelogin endpoint that revokes a specific refreshtoken.
+9. Test that the above system works:
+	1. Make sure you have several existing refreshtokens.
+	2. Use /logins to get a list of existing refreshtokens.
+	3. Pick one and use it to request a new token. This should work.
+	3. Use /revokelogin to revoke the refreshtoken you picked.
+	4. Try step 3 again. It should return a 401.
