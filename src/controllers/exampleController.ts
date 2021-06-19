@@ -3,7 +3,6 @@ import express from 'express'
 
 // Hello World
 const helloWorld = async (req: express.Request, res: express.Response) => {
-    console.log('/req')
     res.send('Hello World\!')
 }
 

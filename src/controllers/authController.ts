@@ -4,6 +4,7 @@
 import User from '../models/User'
 import jwt from 'jsonwebtoken'
 import express from 'express'
+import standardizeIfMongoError from '../helpers'
 
 // Duration of JWT
 const maxAge = 3 * 24 * 60 * 60 // 3 days (TODO: Figure out refresh token)
@@ -23,7 +24,7 @@ const signup = async (req: express.Request, res: express.Response) => {
         res.status(201).json({ user: user._id })
     }
     catch (err) {
-        console.log(err)
+        err = standardizeIfMongoError(err)
         res.status(400).send(err)
     }
 }

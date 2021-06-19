@@ -12,8 +12,9 @@ Changes needed:
 2. If needed, force the client to send extra info about itself on login, such as the user agent and device (reject logins without this info) for use with the above.
 3. Decide on the exact info that will be stored with each refreshtoken.
 4. Add a new property to the User schema, in which refreshtokens and associated info can be stored.
-5. Create a /token endpoint that accepts a refresh token and issues a new token.
-6. Test that the above system works:
+5. Make sure a refreshToken is generated, stored, and returned on login.
+6. Create a /token endpoint that accepts a refresh token and issues a new token.
+7. Test that the above system works:
 	1. Log in and take note of the provided token and refresh token.
 	2. Attempt to access a protected route without the token. This should return a 401.
 	3. Try again with an invalid (modified) token. This should also return a 401.
@@ -23,11 +24,19 @@ Changes needed:
 	7. Try again with an invalid (modified) refreshtoken. This should also return a 401.
 	8. Attempt to request a new token using the provided refreshtoken. This should return a new token.
 	9. Repeat steps 4 and 5 with the new token.
-7. Create a protected /logins endpoint that returns info about existing refreshtokens.
-8. Create a protected /revokelogin endpoint that revokes a specific refreshtoken.
-9. Test that the above system works:
+8. Create a protected /logins endpoint that returns info about existing refreshtokens.
+9. Create a protected /revokelogin endpoint that revokes a specific refreshtoken.
+10. Test that the above system works:
 	1. Make sure you have several existing refreshtokens.
 	2. Use /logins to get a list of existing refreshtokens.
 	3. Pick one and use it to request a new token. This should work.
 	3. Use /revokelogin to revoke the refreshtoken you picked.
 	4. Try step 3 again. It should return a 401.
+
+Progress tracking:
+1. req.hostname and req.headers['user-agent'] are enough.
+2. No need.
+3. Data in step 1.
+   A unique (Mongo) ID for each refreshtoken that can be used to reference it without providing the token itself.
+   The time the refreshtoken was last used (will generate on login).
+4. Done.

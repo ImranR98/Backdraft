@@ -5,6 +5,9 @@ import mongoose from 'mongoose'
 import validator from 'validator'
 import bcrypt from 'bcrypt'
 
+// Define refresh token schema
+const refreshTokenSchema = new mongoose.Schema()
+
 // Define schema
 const userSchema = new mongoose.Schema({
   email: {
@@ -18,6 +21,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password not provided.'],
     minlength: [6, 'Password must be at least 12 characters.'],
+  },
+  refreshTokens: {
+    type: [{
+      refreshToken: {
+        type: String,
+        required: [true, 'Refresh token not provided.'],
+      },
+      ip: {
+        type: String,
+        required: [true, 'IP not provided.'],
+      },
+      userAgent: {
+        type: String,
+        required: [true, 'User agent not provided.']
+      }
+    }]
   }
 })
 
