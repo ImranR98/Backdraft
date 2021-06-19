@@ -1,3 +1,5 @@
+Planning Notes for Refresh Token Implementation
+
 - User logs in, gets token + refreshtoken:
 	- Unlike the token, all refreshtokens are stored in the user table.
 	- Along with some info about the request (device, IP, when the refreshtoken was last used, etc.)
