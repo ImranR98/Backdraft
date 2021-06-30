@@ -12,5 +12,6 @@ router.get('/hello-world', exampleController.helloWorld)
 router.get('/protected', requireAuth, exampleController.protectedRoute)
 router.post('/signup', authController.signup)
 router.post('/login', authController.login)
+router.post('/token', authController.token)
 
 export default router

@@ -1,6 +1,7 @@
 // Various helper functions that don't fit elsewhere
 
 import { mongo } from 'mongoose'
+import https from 'https'
 
 const modifyError = (err: any) => {
     console.log(err)
@@ -18,4 +19,20 @@ const modifyError = (err: any) => {
     return err
 }
 
-export default modifyError
+const simpleHttpGet = (url: string) => {
+    return new Promise((resolve, reject) => {
+        https.get(url, (resp) => {
+            let data = ''
+            resp.on('data', (chunk) => {
+                data += chunk
+            })
+            resp.on('end', () => {
+                resolve(JSON.parse(data))
+            })
+        }).on("error", (err) => {
+            reject(err)
+        })
+    })
+}
+
+export { modifyError, simpleHttpGet }

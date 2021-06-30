@@ -1,4 +1,4 @@
-Planning Notes for Refresh Token Implementation
+Planning Notes
 
 - User logs in, gets token + refreshtoken:
 	- Unlike the token, all refreshtokens are stored in the user table.
@@ -8,6 +8,8 @@ Planning Notes for Refresh Token Implementation
 	- User can request a new token using the refreshtoken, then use the new one.
 	- If the refreshtoken is invalid, user gets 401.
 - If a logged in user wants, they can take a look at their refreshtokens (not the tokens themselves, but some associated data such as device or IP) and choose to revoke the token.
+- Older tokens are automatically revoked in accordance with some policy based on token usage.
+- User can reset their password. This optionally revokes all refresh tokens.
 
 Changes needed:
 1. Take a look at the req object and see what data about the client is available to associate with a refreshtoken.
@@ -28,7 +30,7 @@ Changes needed:
 	7. Try again with an invalid (modified) refreshtoken. This should also return a 401.
 	8. Attempt to request a new token using the provided refreshtoken. This should return a new token.
 	9. Repeat steps 4 and 5 with the new token.
-10. Create a protected /logins endpoint that returns info about existing refreshtokens.
+10. Create a protected /logins endpoint that returns ip+useragent info about existing refreshtokens. Use a free IP lookup API to show the user location instead of IP.
 11. Create a protected /revokelogin endpoint that revokes a specific refreshtoken.
 12. Test that the above system works:
 	1. Make sure you have several existing refreshtokens.
@@ -36,6 +38,8 @@ Changes needed:
 	3. Pick one and use it to request a new token. This should work.
 	3. Use /revokelogin to revoke the refreshtoken you picked.
 	4. Try step 3 again. It should return a 401.
+13. Implement a /reset-password endpoint that also optionally revokes all refresh tokens. Test it.
+14. Replace the hardcoded token secret and DB URI with environment variables.
 
 Progress tracking:
 1. req.ip and req.headers['user-agent'] are enough.
@@ -46,6 +50,8 @@ Progress tracking:
 4. Done.
 5. Done.
 6. Done.
+7. Done.
+8. Done.
 
 Concerns so far:
 - Sometimes, a user may manually log out (reasonable client software would destroy the refresh token then) or they may lose their refresh tokens in some other way.
