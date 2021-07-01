@@ -40,7 +40,7 @@ userSchema.pre('save', async function (this, next) {
   next()
 })
 
-// Static login function
+// Login (and run refresh token cleanup)
 userSchema.statics.login = async function (this, email, password, ip, userAgent) {
   const refreshToken = crypto.randomBytes(64).toString('hex')
   const user = await this.findOne({ email })
@@ -66,12 +66,13 @@ userSchema.statics.login = async function (this, email, password, ip, userAgent)
   throw new StandardError(401, 'INVALID_LOGIN', 'Email or password is invalid')
 }
 
-// Satic revoke token function (could have been done without email, but this is more efficient)
-userSchema.statics.revokeRefreshToken = async function (this, email, _id) {
-  await this.updateOne({ email }, { $pull: { refreshTokens: { _id } } })
+// Revoke token (could have been done without userId, but this is more efficient)
+userSchema.statics.revokeRefreshToken = async function (this, userId, refreshTokenId) {
+  const result = await this.updateOne({ _id: userId }, { $pull: { refreshTokens: { _id: refreshTokenId } } })
+  if (!result.nModified) throw new StandardError(400, 'INVALID_REFRESH_TOKEN_ID', 'Refresh token ID is invalid')
 }
 
-// Static validate refresh token function (updates the token as well)
+// Validate refresh token (updates the token as well)
 userSchema.statics.validateRefreshToken = async function (this, refreshToken, ip, userAgent) {
   const user = await this.findOne({ "refreshTokens.refreshToken": refreshToken })
   if (user) {
@@ -80,6 +81,11 @@ userSchema.statics.validateRefreshToken = async function (this, refreshToken, ip
       { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } })
     return user._id
   } else throw new StandardError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid')
+}
+
+// Get refresh tokens
+userSchema.statics.getRefreshTokens = async function (this, _id) {
+  return (await this.findOne({ _id })).refreshTokens
 }
 
 // Define and export the model

@@ -13,5 +13,7 @@ router.get('/protected', requireAuth, exampleController.protectedRoute)
 router.post('/signup', authController.signup)
 router.post('/login', authController.login)
 router.post('/token', authController.token)
+router.get('/logins', requireAuth, authController.logins)
+router.post('/revokeRefreshToken', requireAuth, authController.revokeRefreshToken)
 
 export default router

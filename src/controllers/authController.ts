@@ -5,6 +5,7 @@ import User from '../models/User'
 import jwt from 'jsonwebtoken'
 import express from 'express'
 import { standardizeError } from '../errors'
+import { simpleHttpGet } from '../helpers'
 
 // Duration of JWT
 const maxAge = 5 * 60 // 15 minutes
@@ -55,4 +56,42 @@ const token = async (req: express.Request, res: express.Response) => {
     }
 }
 
-export default { signup, login, token }
+// Login list handler
+const logins = async (req: express.Request, res: express.Response) => {
+    try {
+        const RTs: { _id: string, ip: string, userAgent: string, date: Date }[] = await (<any>User).getRefreshTokens(res.locals.user._id)
+        console.log(RTs)
+        const logins: { _id: string, ip: string, userAgent: string, lastUsed: Date, location: { city: string, country: string } | null }[] = []
+        for (let i = 0; i < RTs.length; i++) {
+            let location: { city: string, country: string } | null = null
+            try {
+                const locationData: any = await simpleHttpGet(`https://freegeoip.app/json/${RTs[i].ip}`)
+                if (locationData.city && locationData.country_name) location = { city: locationData.city, country: locationData.country_name }
+            } catch (err) {
+                location = null
+            }
+            logins.push({ _id: RTs[i]._id, ip: RTs[i].ip, userAgent: RTs[i].userAgent, lastUsed: RTs[i].date, location })
+        }
+        res.send(logins)
+    } catch (err) {
+        const error = standardizeError(err)
+        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
+    }
+}
+
+// Revoke refresh token handler
+const revokeRefreshToken = async (req: express.Request, res: express.Response) => {
+    const { tokenId } = req.body
+    try {
+        const result = await (<any>User).revokeRefreshToken(res.locals.user._id, tokenId)
+        console.log(result)
+        res.send()
+    } catch (err) {
+        const error = standardizeError(err)
+        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
+    }
+}
+
+
+
+export default { signup, login, token, logins, revokeRefreshToken }

@@ -46,7 +46,6 @@ const standardizeError = (err: any) => {
     if (err instanceof StandardError) return err
     const error = new StandardError()
     if (typeof err === 'string') error.message = err
-    if (err instanceof Error) error.message = err.message
     if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)
     return error
 }

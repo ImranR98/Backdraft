@@ -47,7 +47,7 @@ const checkUser = async (req: express.Request, res: express.Response, next: expr
   try {
     const decodedToken = await decodeToken(req.headers.authorization?.toString())
     let user = await User.findById((<any>decodedToken).id)
-    res.locals.user = user
+    res.locals.user = { _id: user._id, email: user.email }
     next()
   } catch (err) {
     res.locals.user = null
