@@ -4,7 +4,7 @@
 import User from '../models/User'
 import jwt from 'jsonwebtoken'
 import express from 'express'
-import { modifyError } from '../helpers'
+import { standardizeError } from '../errors'
 
 // Duration of JWT
 const maxAge = 5 * 60 // 15 minutes
@@ -24,7 +24,8 @@ const signup = async (req: express.Request, res: express.Response) => {
         res.status(201).send()
     }
     catch (err) {
-        res.status(400).send(modifyError(err))
+        const error = standardizeError(err)
+        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
     }
 }
 
@@ -36,7 +37,8 @@ const login = async (req: express.Request, res: express.Response) => {
         res.status(200).send({ token: createToken(user._id), refreshToken })
     }
     catch (err) {
-        res.status(400).send(modifyError(err))
+        const error = standardizeError(err)
+        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
     }
 }
 
@@ -48,7 +50,8 @@ const token = async (req: express.Request, res: express.Response) => {
         res.status(200).send({ user: userId, token: createToken(userId) })
     }
     catch (err) {
-        res.status(err === null ? 401 : 400).send(modifyError(err))
+        const error = standardizeError(err)
+        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
     }
 }
 

@@ -4,6 +4,7 @@
 import jwt, { VerifyErrors } from 'jsonwebtoken'
 import User from '../models/User'
 import express from 'express'
+import { StandardError } from '../errors'
 
 // Parse raw token (remove 'Bearer')
 const trimToken = (token: string | undefined) => {
@@ -36,7 +37,8 @@ const requireAuth = async (req: express.Request, res: express.Response, next: ex
     const decodedToken = await decodeToken(req.headers.authorization?.toString())
     next()
   } catch (err) {
-    res.status(401).send()
+    const error = new StandardError(401, 'INVALID_TOKEN', 'Token is invalid')
+    res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
   }
 }
 

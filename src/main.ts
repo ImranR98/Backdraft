@@ -20,4 +20,4 @@ app.use(routes)
 const dbURI = 'mongodb://localhost:27017/auth'
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }).then((result) =>
     app.listen(process.env.PORT || 8080, () => console.log(`Express server launched (port ${process.env.PORT || 8080})`))
-).catch((err) => console.log(err))
+).catch((err) => console.error(err))

@@ -5,6 +5,7 @@ import mongoose from 'mongoose'
 import validator from 'validator'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+import { StandardError } from '../errors'
 
 // Define refresh token sub-schema
 // No use setting required validators as these are ignored when the sub-schema is in an array, as it is below
@@ -61,9 +62,8 @@ userSchema.statics.login = async function (this, email, password, ip, userAgent)
       })
       return { user, refreshToken }
     }
-    throw Error('Password is incorrect.')
   }
-  throw Error('Email not found.')
+  throw new StandardError(401, 'INVALID_LOGIN', 'Email or password is invalid')
 }
 
 // Satic revoke token function (could have been done without email, but this is more efficient)
@@ -79,7 +79,7 @@ userSchema.statics.validateRefreshToken = async function (this, refreshToken, ip
     await this.updateOne({ _id: user._id, refreshTokens: { refreshToken } },
       { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } })
     return user._id
-  } else throw null
+  } else throw new StandardError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid')
 }
 
 // Define and export the model
