@@ -40,8 +40,10 @@ Changes needed:
 	4. Try step 3 again. It should return a 401.
 13. Implement a /reset-password endpoint that also optionally revokes all refresh tokens. Test it.
 14. Replace the hardcoded token secret and DB URI with environment variables.
+15. Look into unit-testing. This line is vague as I have no idea what I'm in for.
 
 Progress tracking:
+------------------
 1. req.ip and req.headers['user-agent'] are enough.
 2. No need.
 3. Data in step 1.
@@ -52,9 +54,20 @@ Progress tracking:
 6. Done.
 7. Done.
 8. Done.
+9. Done:
+	5:18 Signed up.
+	5:18 Logged in and noted token, refresh token.
+	5:19 Failed to access protected route with no/modified token (401).
+	5:19 Successfuly accessed protected route with token.
+	5:25 Failed to access protected route with expired token (401).
+	5:26 Failed to obtain new token with no/modified refresh token (401).
+	5:30 Fixed a bug. Successfuly obtained new refresh token.
+	5:32 Successfuly accessed protected route with new token.
+	5:35 Failed to access protected route with expired new token (401).
 
 Concerns so far:
-- Sometimes, a user may manually log out (reasonable client software would destroy the refresh token then) or they may lose their refresh tokens in some other way.
+----------------
+Sometimes, a user may manually log out (reasonable client software would destroy the refresh token then) or they may lose their refresh tokens in some other way.
   The server still stores that refresh token. Over time, this would lead to thousands of dead refresh tokens building up in the DB.
   Obviously, very old tokens should be revoked automatically. But when and how is this appropriate? Isn't the point of refresh tokens that they are forever?
   For now, I have decided that old tokens should be revoked when a new one is requested (login). Specifically:
@@ -62,3 +75,4 @@ Concerns so far:
 	- All tokens that haven't been used in year are revoked.
   Is this the best way? Is the IP Express recieves always accurate? What if a user has two identical user agents on the same network?
   In that case, would the IP I recieve be accurate to the individual device or the network? If it is precise, do I need the 30 day limit? Why not revoke immediately?
+

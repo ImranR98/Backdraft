@@ -73,13 +73,13 @@ userSchema.statics.revokeRefreshToken = async function (this, email, _id) {
 
 // Static validate refresh token function (updates the token as well)
 userSchema.statics.validateRefreshToken = async function (this, refreshToken, ip, userAgent) {
-  const user = await this.findOne({ refreshTokens: { refreshToken } })
+  const user = await this.findOne({ "refreshTokens.refreshToken": refreshToken })
   if (user) {
     // Update the refresh token last used date, along with IP and user agent (although those are likely unchanged)
     await this.updateOne({ _id: user._id, refreshTokens: { refreshToken } },
       { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } })
     return user._id
-  } else throw Error('Refresh token is invalid.')
+  } else throw null
 }
 
 // Define and export the model

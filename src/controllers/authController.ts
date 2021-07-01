@@ -7,7 +7,7 @@ import express from 'express'
 import { modifyError } from '../helpers'
 
 // Duration of JWT
-const maxAge = 15 * 60 // 15 minutes
+const maxAge = 5 * 60 // 15 minutes
 
 // Function to create JWT
 const createToken = (id: string) => {
@@ -21,7 +21,7 @@ const signup = async (req: express.Request, res: express.Response) => {
     const { email, password } = req.body
     try {
         const user = await User.create({ email, password })
-        res.status(201).json({ user: user._id })
+        res.status(201).send()
     }
     catch (err) {
         res.status(400).send(modifyError(err))
@@ -33,7 +33,7 @@ const login = async (req: express.Request, res: express.Response) => {
     const { email, password } = req.body
     try {
         const { user, refreshToken } = await (<any>User).login(email, password, req.ip, req.headers['user-agent'])
-        res.status(200).send({ user: user._id, token: createToken(user._id), refreshToken })
+        res.status(200).send({ token: createToken(user._id), refreshToken })
     }
     catch (err) {
         res.status(400).send(modifyError(err))
@@ -48,7 +48,7 @@ const token = async (req: express.Request, res: express.Response) => {
         res.status(200).send({ user: userId, token: createToken(userId) })
     }
     catch (err) {
-        res.status(400).send(modifyError(err))
+        res.status(err === null ? 401 : 400).send(modifyError(err))
     }
 }
 
