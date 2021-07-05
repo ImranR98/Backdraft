@@ -1,19 +1,52 @@
-// Error handling code
+// Error standardization code
 
 import { MongoError } from 'mongodb'
 
+// Define a standard error object that can be sent to client
 class StandardError {
     httpCode: number
     errorCode: string
     message: string
+    data: any
 
-    constructor(responseCode: number = 400, errorCode: string = 'GENERAL_ERROR', message: string = 'Something went wrong') {
-        this.httpCode = responseCode
-        this.errorCode = errorCode
-        this.message = message
+    constructor(errorNum: number = 0, data: any = undefined) {
+        this.data = data
+        switch (errorNum) {
+            case 1:
+                this.httpCode = 400
+                this.errorCode = 'INVALID_ARGUMENTS'
+                this.message = 'One or more arguments are missing or invalid'
+                break;
+            case 2:
+                this.httpCode = 401
+                this.errorCode = 'INVALID_LOGIN'
+                this.message = 'Email or password is invalid'
+                break;
+            case 3:
+                this.httpCode = 401
+                this.errorCode = 'INVALID_TOKEN'
+                this.message = 'Authorization token is invalid'
+                break;
+            case 4:
+                this.httpCode = 401
+                this.errorCode = 'INVALID_REFRESH_TOKEN'
+                this.message = 'Refresh token is invalid'
+                break;
+            case 5:
+                this.httpCode = 401
+                this.errorCode = 'INVALID_REFRESH_TOKEN_ID'
+                this.message = 'Refresh token ID is invalid'
+                break;
+            default:
+                this.httpCode = 400
+                this.errorCode = 'GENERAL_ERROR'
+                this.message = 'Something went wrong'
+                break;
+        }
     }
 }
 
+// Check if a given object is a standard error
 const isStandardError = (err: any): err is StandardError => {
     if (typeof err !== 'object') return false
     const keys = Object.keys(err)
@@ -31,6 +64,7 @@ const isStandardError = (err: any): err is StandardError => {
     return true
 }
 
+// Convert some MongoDB errors into client-friendly messages
 const getMessageForMongoError = (err: MongoError, defaultMessage: string) => {
     let message = defaultMessage
     if (err.code === 11000) {
@@ -41,6 +75,7 @@ const getMessageForMongoError = (err: MongoError, defaultMessage: string) => {
     return message
 }
 
+// Converts any input into a standard error as best as possible
 const standardizeError = (err: any) => {
     console.error(err)
     if (err instanceof StandardError) return err

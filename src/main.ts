@@ -3,8 +3,9 @@
 // Module imports
 import express from 'express'
 import mongoose from 'mongoose'
-import routes from './routes'
+import authRoutes from './routes/authRoutes'
 import { checkUser } from './middleware/authMiddleware'
+import { standardizeError } from './errors'
 
 // Prepare Express and middleware
 const app: express.Application = express()
@@ -13,8 +14,14 @@ app.use(express.json())
 // Always add user data from the JWT, if any, to the current request
 app.use(checkUser)
 
+// Standardize any error before sending to the client
+app.use((err: any, req: express.Request, res: express.Response) => {
+    const error = standardizeError(err)
+    res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
+})
+
 // Import routes
-app.use(routes)
+app.use(authRoutes)
 
 // Connect to DB and start server
 const dbURI = 'mongodb://localhost:27017/auth'

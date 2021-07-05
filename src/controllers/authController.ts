@@ -1,97 +1,87 @@
-// Authentication request handlers
+// authController.ts
+// Provides all major functions related to authentication (also tangentially related ones like the devices() function)
 
-// Module imports
 import User from '../models/User'
 import jwt from 'jsonwebtoken'
-import express from 'express'
-import { standardizeError } from '../errors'
-import { simpleHttpGet } from '../helpers'
+import { getLocationByIP, simpleHttpGet } from '../helpers'
+import bcrypt from 'bcrypt'
+import crypto from 'crypto'
+import { StandardError } from '../errors'
 
 // Duration of JWT
-const maxAge = 5 * 60 // 15 minutes
+const maxAge = 5 * 60 // 15 minutes // TODO: Make env. var
 
-// Function to create JWT
+// Create JWT
 const createToken = (id: string) => {
-    return jwt.sign({ id }, 'superduperhiddensecretmysteriousencryptedcryptocode', {
+    return jwt.sign({ id }, 'superduperhiddensecretmysteriousencryptedcryptocode', { // TODO: Make env. var
         expiresIn: maxAge
     })
 }
 
-// Signup handler
-const signup = async (req: express.Request, res: express.Response) => {
-    const { email, password } = req.body
-    try {
-        const user = await User.create({ email, password })
-        res.status(201).send()
-    }
-    catch (err) {
-        const error = standardizeError(err)
-        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
-    }
+// Hash passwords
+const hashPassword = async (password: string) => {
+    const salt = await bcrypt.genSalt();
+    await bcrypt.hash(password, salt)
 }
 
-// Login handler
-const login = async (req: express.Request, res: express.Response) => {
-    const { email, password } = req.body
-    try {
-        const { user, refreshToken } = await (<any>User).login(email, password, req.ip, req.headers['user-agent'])
-        res.status(200).send({ token: createToken(user._id), refreshToken })
-    }
-    catch (err) {
-        const error = standardizeError(err)
-        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
-    }
+// Signup
+const signup = async (email: string, password: string) => {
+    await User.create({ email, password: hashPassword(password) })
 }
 
-// Refresh token handler
-const token = async (req: express.Request, res: express.Response) => {
-    const { refreshToken } = req.body
-    try {
-        const userId: string = await (<any>User).validateRefreshToken(refreshToken, req.ip, req.headers['user-agent'])
-        res.status(200).send({ user: userId, token: createToken(userId) })
-    }
-    catch (err) {
-        const error = standardizeError(err)
-        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
-    }
-}
-
-// Login list handler
-const logins = async (req: express.Request, res: express.Response) => {
-    try {
-        const RTs: { _id: string, ip: string, userAgent: string, date: Date }[] = await (<any>User).getRefreshTokens(res.locals.user._id)
-        console.log(RTs)
-        const logins: { _id: string, ip: string, userAgent: string, lastUsed: Date, location: { city: string, country: string } | null }[] = []
-        for (let i = 0; i < RTs.length; i++) {
-            let location: { city: string, country: string } | null = null
-            try {
-                const locationData: any = await simpleHttpGet(`https://freegeoip.app/json/${RTs[i].ip}`)
-                if (locationData.city && locationData.country_name) location = { city: locationData.city, country: locationData.country_name }
-            } catch (err) {
-                location = null
-            }
-            logins.push({ _id: RTs[i]._id, ip: RTs[i].ip, userAgent: RTs[i].userAgent, lastUsed: RTs[i].date, location })
+// Login
+const login = async (email: string, password: string, ip: string, userAgent: string) => {
+    const refreshToken = crypto.randomBytes(64).toString('hex')
+    const user = await User.findOne({ email })
+    if (user) {
+        const auth = await bcrypt.compare(password, user.password)
+        if (auth) {
+            await User.updateOne({ _id: user._id }, {
+                $push: { refreshTokens: { refreshToken, ip, userAgent, date: new Date() } }
+            })
+            // Get rid of any refresh token that hasn't been used in 30 days and is from the same IP and user-agent combo
+            let lastMonth = new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * 30.44)
+            await User.updateOne({ _id: user._id }, {
+                $pull: { refreshTokens: { ip, userAgent, date: { $lt: lastMonth } } },
+            })
+            // Get rid of any refresh tokens that haven't been used in a year, regardless of IP or user-agent combo
+            let lastYear = new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * 365.2425)
+            await User.updateOne({ _id: user._id }, {
+                $pull: { refreshTokens: { date: { $lt: lastYear } } },
+            })
+            return { token: createToken(user._id), refreshToken }
         }
-        res.send(logins)
-    } catch (err) {
-        const error = standardizeError(err)
-        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
     }
+    throw new StandardError(2)
 }
 
-// Revoke refresh token handler
-const revokeRefreshToken = async (req: express.Request, res: express.Response) => {
-    const { tokenId } = req.body
-    try {
-        const result = await (<any>User).revokeRefreshToken(res.locals.user._id, tokenId)
-        console.log(result)
-        res.send()
-    } catch (err) {
-        const error = standardizeError(err)
-        res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
-    }
+// Get a new token using a refresh token
+const token = async (refreshToken: string, ip: string, userAgent: string) => {
+    const user = await User.findOne({ "refreshTokens.refreshToken": refreshToken })
+    if (user) {
+        // Update the refresh token last used date, along with IP and user agent (although those are likely unchanged)
+        await User.updateOne({ _id: user._id, refreshTokens: { refreshToken } },
+            { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } })
+        return { user: user._id, token: createToken(user._id) }
+    } else throw new StandardError(4)
 }
 
+// Get list of 'devices' (refresh token info)
+const logins = async (userId: string) => {
+    const RTs: { _id: string, ip: string, userAgent: string, date: Date }[] = (await User.findOne({ _id: userId })).refreshTokens
+    const logins: { _id: string, ip: string, userAgent: string, lastUsed: Date, location: { city: string, country: string } | null }[] = []
+    for (let i = 0; i < RTs.length; i++) {
+        logins.push({ _id: RTs[i]._id, ip: RTs[i].ip, userAgent: RTs[i].userAgent, lastUsed: RTs[i].date, location: await getLocationByIP(RTs[i].ip) })
+    }
+    return logins
+}
+
+// Revoke a refresh token
+const revokeRefreshToken = async (tokenId: string, userId: string) => {
+    const result = await User.updateOne({ _id: userId }, { $pull: { refreshTokens: { _id: tokenId } } })
+    if (!result.nModified) throw new StandardError(5)
+    console.log(result)
+}
 
 
 export default { signup, login, token, logins, revokeRefreshToken }

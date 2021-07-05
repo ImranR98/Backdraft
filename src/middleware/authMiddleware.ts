@@ -1,6 +1,7 @@
-// Authentication middleware
+// authMiddleware.ts
+// Provides middleware that attaches user info to a request from the JWT if present and valid
+// Also provides middleware that throws an error if the JWT is absent or invalid
 
-// Module imports
 import jwt, { VerifyErrors } from 'jsonwebtoken'
 import User from '../models/User'
 import express from 'express'
@@ -18,7 +19,7 @@ const decodeToken = (token: string | undefined) => {
   return new Promise((resolve, reject) => {
     token = trimToken(token?.toString())
     if (token) {
-      jwt.verify(token, 'superduperhiddensecretmysteriousencryptedcryptocode', (err: VerifyErrors | null, decodedToken: object | undefined) => {
+      jwt.verify(token, 'superduperhiddensecretmysteriousencryptedcryptocode', (err: VerifyErrors | null, decodedToken: object | undefined) => { // TODO: Make env. var
         if (err) {
           reject(err)
         } else {
@@ -37,7 +38,7 @@ const requireAuth = async (req: express.Request, res: express.Response, next: ex
     const decodedToken = await decodeToken(req.headers.authorization?.toString())
     next()
   } catch (err) {
-    const error = new StandardError(401, 'INVALID_TOKEN', 'Token is invalid')
+    const error = new StandardError(3)
     res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
   }
 }
