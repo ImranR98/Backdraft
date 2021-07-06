@@ -3,7 +3,6 @@
 
 import User from '../models/User'
 import jwt from 'jsonwebtoken'
-import { getLocationByIP, simpleHttpGet } from '../helpers'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { StandardError } from '../errors'
@@ -69,9 +68,9 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
 // Get list of 'devices' (refresh token info)
 const logins = async (userId: string) => {
     const RTs: { _id: string, ip: string, userAgent: string, date: Date }[] = (await User.findOne({ _id: userId })).refreshTokens
-    const logins: { _id: string, ip: string, userAgent: string, lastUsed: Date, location: { city: string, country: string } | null }[] = []
+    const logins: { _id: string, ip: string, userAgent: string, lastUsed: Date }[] = []
     for (let i = 0; i < RTs.length; i++) {
-        logins.push({ _id: RTs[i]._id, ip: RTs[i].ip, userAgent: RTs[i].userAgent, lastUsed: RTs[i].date, location: await getLocationByIP(RTs[i].ip) })
+        logins.push({ _id: RTs[i]._id, ip: RTs[i].ip, userAgent: RTs[i].userAgent, lastUsed: RTs[i].date })
     }
     return logins
 }
