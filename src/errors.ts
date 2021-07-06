@@ -33,9 +33,19 @@ class StandardError {
                 this.message = 'Refresh token is invalid'
                 break;
             case 5:
+                this.httpCode = 400
+                this.errorCode = 'MISSING_USER'
+                this.message = 'Specified user was not found'
+                break;
+            case 6:
+                this.httpCode = 400
+                this.errorCode = 'MISSING_ITEM'
+                this.message = 'Specified item was not found'
+                break;
+            case 5:
                 this.httpCode = 401
-                this.errorCode = 'INVALID_REFRESH_TOKEN_ID'
-                this.message = 'Refresh token ID is invalid'
+                this.errorCode = 'WRONG_PASSWORD'
+                this.message = 'Password is incorrect'
                 break;
             default:
                 this.httpCode = 400

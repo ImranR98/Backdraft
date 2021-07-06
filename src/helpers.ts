@@ -1,6 +1,5 @@
 // Various helper functions that don't fit elsewhere
 
-import https from 'https'
 import { StandardError } from './errors'
 
 // Ensures the provided object contains all string properties named in the props array

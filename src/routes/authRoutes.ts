@@ -52,11 +52,23 @@ router.get('/logins', requireAuth,
     }
 )
 
-router.post('/revokeRefreshToken', requireAuth,
+router.post('/revoke-login', requireAuth,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['tokenId'])
             res.status(200).send(await authController.revokeRefreshToken(req.body.tokenId, res.locals.user._id))
+        } catch (err) {
+            next(err)
+        }
+    }
+)
+
+router.post('/change-password', requireAuth,
+    async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        try {
+            validateStringArgs(req.body, ['password', 'newPassword'])
+            await authController.changePassword(res.locals.user._id, req.body.password, req.body.newPassword, req.body.revokeRefreshTokens === true, req.ip, req.headers['user-agent'] || '')
+            res.status(200).send()
         } catch (err) {
             next(err)
         }

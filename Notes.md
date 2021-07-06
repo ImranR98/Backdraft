@@ -23,19 +23,19 @@
   8. Attempt to request a new token using the provided refresh token. This should return a new token.
   9. Repeat steps 4 and 5 with the new token.
 - [x] Create a protected `/logins` endpoint that returns IP + user-agent info about existing refresh tokens. Use a free IP lookup API to show the user location instead of IP.
-- [x] Create a protected `/revokelogin` endpoint that revokes a specific refresh token.
+- [x] Create a protected `/revoke-login` endpoint that revokes a specific refresh token.
 - [x] Test that the above system works:
   1. Make sure you have several existing refresh tokens.
   2. Use `/logins` to get a list of existing refresh tokens.
   3. Pick one and use it to request a new token. This should work.
-  3. Use `/revokelogin` to revoke the refresh token you picked.
+  3. Use `/revoke-login` to revoke the refresh token you picked.
   4. Try step 3 again. It should return a 401.
 - [x] Refactor code:
   - Make controllers not receive `req` and `res` directly; those should be handled in the routes.
   - See if it makes more sense to move the logic in User model static functions into the controllers.
   - Go through all code so far, see if anything else needs changing. Everything should be where it makes the most sense to be. Deduplicate code, separate concerns, think of future extensibility.
 - [x] Test again to ensure changes have not introduced new bugs.
-- [ ] Implement a /reset-password endpoint that also optionally revokes all refresh tokens. Test it.
+- [ ] Implement a `/reset-password` endpoint that also optionally revokes all refresh tokens. Test it.
 - [ ] Replace the hardcoded token secret and DB URI with environment variables.
 - [ ] Update `README.md` with a breakdown of project structure, explaining the 3 layers (DB, controllers, routes) and anything else.
 - [ ] Look into unit-testing. This line is vague as I have no idea what it entails.
