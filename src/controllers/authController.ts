@@ -80,7 +80,6 @@ const logins = async (userId: string) => {
 const revokeRefreshToken = async (tokenId: string, userId: string) => {
     const result = await User.updateOne({ _id: userId }, { $pull: { refreshTokens: { _id: tokenId } } })
     if (!result.nModified) throw new StandardError(5)
-    console.log(result)
 }
 
 
