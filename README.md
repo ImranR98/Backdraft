@@ -1,18 +1,12 @@
 # 🌐 BasicBackend
 
-Most web service backends share certain basic features, the most important of which is a simple authentication system. Trying to implement essential features, such as JSON Web Token authentication, from scratch for each new project can lead to rushed or inconsistent code. For example, a commonly seen mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue regular JWTs with ridiculously long expiration times; an obvious security risk.
+Most web service backends share certain basic features, the most important of which is a simple authentication system. Trying to implement such essential features from scratch with each new project (when the projects share the same stack) is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue regular JWTs with ridiculously long expiration times, leading to an obvious security risk and poorer UX.
 
-BasicBackend is an attempt at creating a solid server with most commonly used features, that can be used as a template or starting off point for any future Node.js server project.
-
-Key goals include a logical structure, good documentation, maintainability, and extensibility.
+BasicBackend is an attempt at creating a solid server with most commonly used features, that can be used as a template or starting off point for any future Node.js server project. Key goals include a logical structure, good documentation, maintainability, and extensibility.
 
 This project uses TypeScript, Express, and MongoDB via Mongoose. 
 
-
-
 > Don't judge this code yet 😅 — it is a work in progress, and that progress may be **S L O W** as this is a hobby/side project.
-
-
 
 ## Features
 
@@ -20,11 +14,14 @@ This project uses TypeScript, Express, and MongoDB via Mongoose.
 - The following authentication related functionality (with associated API endpoints):
   - Users can sign up with email.
   - Users can login to receive a JSON web token and a refresh token; these will be used for authentication.
-  - Users can request information about refresh tokens currently associated with their account. These are called 'logins', and available data includes the IP address from which each token was last used, along with the user agent and date.
+  - Users can request information about refresh tokens currently associated with their account. These are called 'logins', and the provided information includes the IP address from which a refresh token was last used, along with the user agent and date.
   - Users can revoke any refresh token at will.
   - Users can change their passwords and optionally revoke all existing refresh tokens when doing so.
 
-
+## Setup/Usage
+1. Use `npm i` to install required dependencies.
+2. Create a copy of `template.env`, rename it to `.env`, and fill in the appropriate details. Alternatively, set up environment variables some other way.
+3. Build the project for production or run in in a development environment using the scripts defined in `package.json`.
 
 ## Project Structure
 
@@ -59,27 +56,25 @@ Implementing new functionality in the application usually involves creating the 
 ### Directory Structure
 
 ```
-├── .gitignore					- Specify files to exclude from version control
-├── Notes.md					- Detailed notes on progress, planning, and concerns
-├── package.json				- Standard Node package.json
-├── package-lock.json			- Standard Node package-lock.json — do not modify
-├── README.md 					- Standard README
-├── src							- Directory containing all code
-│   ├── controllers				- Controller directory
-│   │   └── authController.ts	- All authentication related functions
-│   ├── errors.ts				- Code related to error standardization
-│   ├── helpers.ts				- Various functions that don't fit elsewhere
-│   ├── main.ts					- Main process code; starting point for execution
-│   ├── middleware				- Middleware directory
-│   │   └── authMiddleware.ts	- Authentication related middleware
-│   ├── models					- Model directory
-│   │   └── User.ts				- User model
-│   └── routes					- Routes directory
-│       └── authRoutes.ts		- Routes related to authentication
-└── tsconfig.json				- TypeScript configuration file
+├── .gitignore                 -  Specify files to exclude from version control
+├── Notes.md                   -  Detailed notes on progress, planning, and concerns
+├── package.json               -  Standard Node package.json
+├── package-lock.json          -  Standard Node package-lock.json — do not modify
+├── README.md                  -  Standard README
+├── src                        -  Directory containing all code
+│   ├── controllers            -  Controller directory
+│   │   └── authController.ts  -  All authentication related functions
+│   ├── errors.ts              -  Code related to error standardization
+│   ├── helpers.ts             -  Various functions that don't fit elsewhere
+│   ├── main.ts                -  Main process code; starting point for execution
+│   ├── middleware             -  Middleware directory
+│   │   └── authMiddleware.ts  -  Authentication related middleware
+│   ├── models                 -  Model directory
+│   │   └── User.ts            -  User model
+│   └── routes                 -  Routes directory
+│       └── authRoutes.ts      -  Routes related to authentication
+└── tsconfig.json              -  TypeScript configuration file
 ```
-
-
 
 ------
 
