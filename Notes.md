@@ -35,12 +35,13 @@
   - See if it makes more sense to move the logic in User model static functions into the controllers.
   - Go through all code so far, see if anything else needs changing. Everything should be where it makes the most sense to be. Deduplicate code, separate concerns, think of future extensibility.
 - [x] Test again to ensure changes have not introduced new bugs.
-- [x] Implement a `/reset-password` endpoint that also optionally revokes all refresh tokens. Test it.
+- [x] Implement a `/change-password` endpoint that also optionally revokes all refresh tokens. Test it.
 - [x] Replace the hardcoded token secret and DB URI with environment variables.
-- [ ] Update `README.md` with a breakdown of project structure, explaining the 3 layers (DB, controllers, routes) and anything else.
-- [ ] Look into unit-testing. This line is vague as I have no idea what it entails.
-- [ ] Look into logging. Line is vague for similar reasons as above.
-- [ ] Update `README.md` as needed.
+- [x] Update `README.md` with a breakdown of project structure, explaining the 3 layers (DB, controllers, routes) and anything else.
+- [ ] Implement a `/change-email` endpoint and test it.
+- [ ] Look into unit-testing. This line is vague as I have no idea what it entails. Tentative.
+- [ ] Look into logging. Line is vague for similar reasons as above. Tentative.
+- [ ] Decide whether to implement email verification and forgot password functionality. This one is a PITA; tentative.
 
 
 
@@ -61,6 +62,9 @@
 
 Concerns
 ----------------
+
+### Refresh Token Cleanup Policy
+
 Sometimes, a user may manually log out (reasonable client software would destroy the refresh token then) or they may lose their refresh tokens in some other way. The server still stores that refresh token. Over time, this would lead to thousands of dead refresh tokens building up in the DB. Obviously, very old tokens should be revoked automatically. But when and how is this appropriate? Isn't the point of refresh tokens that they are forever? For now, I have decided that old tokens should be revoked when a new one is requested (login). Specifically:
 
 - All tokens that haven't been used in 30 days that came from the same IP and user agent as the latest login are revoked.
