@@ -42,7 +42,7 @@ class StandardError {
                 this.errorCode = 'MISSING_ITEM'
                 this.message = 'Specified item was not found'
                 break;
-            case 5:
+            case 7:
                 this.httpCode = 401
                 this.errorCode = 'WRONG_PASSWORD'
                 this.message = 'Password is incorrect'

@@ -21,7 +21,7 @@ const createToken = (id: string) => {
 // Hash passwords
 const hashPassword = async (password: string) => {
     const salt = await bcrypt.genSalt();
-    await bcrypt.hash(password, salt)
+    return await bcrypt.hash(password, salt)
 }
 
 // Assuming the user of provided ID exists, save + return a new refresh token for them and run a cleanup policy on their existing refresh tokens
@@ -46,7 +46,7 @@ const assignNewRefreshToken = async (userId: string, ip: string, userAgent: stri
 
 // Signup
 const signup = async (email: string, password: string) => {
-    await User.create({ email, password: hashPassword(password) })
+    await User.create({ email, password: await hashPassword(password) })
 }
 
 // Login
@@ -88,15 +88,15 @@ const revokeRefreshToken = async (tokenId: string, userId: string) => {
 }
 
 // Change password, optionally revoking all refresh tokens
-const changePassword = async (userId: string, password: string, newPassword: string, revokeTokens: boolean, ip: string, userAgent: string) => {
+const changePassword = async (userId: string, password: string, newPassword: string, revokeRefreshTokens: boolean, ip: string, userAgent: string) => {
     const user = await User.findOne({ _id: userId })
-    if (!user) throw new StandardError(2)
+    if (!user) throw new StandardError(5)
     const auth = await bcrypt.compare(password, user.password)
-    if (!auth) throw new StandardError(5)
-    let changes: any = { password: hashPassword(newPassword) }
-    if (revokeTokens) changes.refreshTokens = []
+    if (!auth) throw new StandardError(7)
+    let changes: any = { password: await hashPassword(newPassword) }
+    if (revokeRefreshTokens) changes.refreshTokens = []
     await User.updateOne({ _id: userId }, { $set: changes })
-    if (revokeTokens) await assignNewRefreshToken(userId, ip, userAgent) // If existing tokens were revoked, return a new one so client doesn't get logged out
+    if (revokeRefreshTokens) return { refreshToken: await assignNewRefreshToken(userId, ip, userAgent) } // If existing tokens were revoked, return a new one so client doesn't get logged out
 }
 
 

@@ -67,8 +67,7 @@ router.post('/change-password', requireAuth,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['password', 'newPassword'])
-            await authController.changePassword(res.locals.user._id, req.body.password, req.body.newPassword, req.body.revokeRefreshTokens === true, req.ip, req.headers['user-agent'] || '')
-            res.status(200).send()
+            res.status(200).send(await authController.changePassword(res.locals.user._id, req.body.password, req.body.newPassword, req.body.revokeRefreshTokens === true, req.ip, req.headers['user-agent'] || ''))
         } catch (err) {
             next(err)
         }
