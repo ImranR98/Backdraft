@@ -36,7 +36,7 @@
   - Go through all code so far, see if anything else needs changing. Everything should be where it makes the most sense to be. Deduplicate code, separate concerns, think of future extensibility.
 - [x] Test again to ensure changes have not introduced new bugs.
 - [x] Implement a `/reset-password` endpoint that also optionally revokes all refresh tokens. Test it.
-- [ ] Replace the hardcoded token secret and DB URI with environment variables.
+- [x] Replace the hardcoded token secret and DB URI with environment variables.
 - [ ] Update `README.md` with a breakdown of project structure, explaining the 3 layers (DB, controllers, routes) and anything else.
 - [ ] Look into unit-testing. This line is vague as I have no idea what it entails.
 - [ ] Look into logging. Line is vague for similar reasons as above.

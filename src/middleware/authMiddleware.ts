@@ -19,7 +19,7 @@ const decodeToken = (token: string | undefined) => {
   return new Promise((resolve, reject) => {
     token = trimToken(token?.toString())
     if (token) {
-      jwt.verify(token, 'superduperhiddensecretmysteriousencryptedcryptocode', (err: VerifyErrors | null, decodedToken: object | undefined) => { // TODO: Make env. var
+      jwt.verify(token, process.env.JWT_KEY || '', (err: VerifyErrors | null, decodedToken: object | undefined) => {
         if (err) {
           reject(err)
         } else {

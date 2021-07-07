@@ -7,13 +7,12 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { StandardError } from '../errors'
 
-
 // Duration of JWT
-const maxAge = 5 * 60 // 15 minutes // TODO: Make env. var
+const maxAge = 5 * 60 // 15 minutes
 
 // Create JWT
 const createToken = (id: string) => {
-    return jwt.sign({ id }, 'superduperhiddensecretmysteriousencryptedcryptocode', { // TODO: Make env. var
+    return jwt.sign({ id }, process.env.JWT_KEY || '', {
         expiresIn: maxAge
     })
 }

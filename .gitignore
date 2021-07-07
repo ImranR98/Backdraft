@@ -7,3 +7,6 @@
 # IDE - VSCode
 .vscode/*
 .history/*
+
+# dotenv
+.env
