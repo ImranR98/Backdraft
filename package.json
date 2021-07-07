@@ -1,8 +1,8 @@
 {
-  "name": "basicbackend",
+  "name": "nemback",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/main.js",
   "scripts": {
     "start": "tsc && node dist/main.js",
     "dev": "tsc -w & nodemon -q -w dist dist/main.js",

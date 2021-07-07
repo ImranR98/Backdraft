@@ -1,12 +1,15 @@
-# 🌐 BasicBackend
+# 🌐 NEMBack
 
-Most web service backends share certain basic features, the most important of which is a simple authentication system. Trying to implement such essential features from scratch with each new project (when the projects share the same stack) is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue regular JWTs with ridiculously long expiration times, leading to an obvious security risk and poorer UX.
+An Express and MongoDB based web server that can be used as a template or starting off point for backend projects. Features JWT and refresh token based authentication, and uses TypeScript and Mongoose for MongoDB. 
 
-BasicBackend is an attempt at creating a solid server with most commonly used features, that can be used as a template or starting off point for any future Node.js server project. Key goals include a logical structure, good documentation, maintainability, and extensibility.
+## Why
+Most web service backends share certain basic features — they usually involve exposing HTTP endpoints that allow for CRUD operations on a database, protected via some kind of authentication.
 
-This project uses TypeScript, Express, and MongoDB via Mongoose. 
+Most Node/Express/MongoDB based backends are obviously even more similar, and they share similar code at their base. Repeatedly implementing these basic features from scratch with each new project that shares this tech stack is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue only regular JWTs with ridiculously long expiration times, leading to security risks and poorer UX.
 
-> Don't judge this code yet 😅 — it is a work in progress, and that progress may be **S L O W** as this is a hobby/side project.
+This project helps avoid these issues. Its key goals include a logical structure, good documentation, maintainability, and extensibility.
+
+> This is a work in progress, and that progress may be **S L O W** 😅 as this is a hobby/side project.
 
 ## Features
 
