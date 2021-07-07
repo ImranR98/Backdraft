@@ -1,13 +1,13 @@
 # 🌐 NEMBack
 
-An Express and MongoDB based web server that can be used as a template or starting off point for backend projects. Features JWT and refresh token based authentication, and uses TypeScript and Mongoose for MongoDB. 
+A Node.js, Express, and MongoDB based web server that can be used as a template or starting off point for backend projects. Features JSON Web Token and refresh token based authentication, and uses TypeScript and Mongoose. 
 
 ## Why
 Most web service backends share certain basic features — they usually involve exposing HTTP endpoints that allow for CRUD operations on a database, protected via some kind of authentication.
 
 Most Node/Express/MongoDB based backends are obviously even more similar, and they share similar code at their base. Repeatedly implementing these basic features from scratch with each new project that shares this tech stack is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue only regular JWTs with ridiculously long expiration times, leading to security risks and poorer UX.
 
-This project helps avoid these issues. Its key goals include a logical structure, good documentation, maintainability, and extensibility.
+This project helps avoid these issues. The goals are a logical structure, good documentation, maintainability, and extensibility.
 
 > This is a work in progress, and that progress may be **S L O W** 😅 as this is a hobby/side project.
 
@@ -48,7 +48,7 @@ Like controllers (see above), these are grouped into files based on a shared the
 
 ### Middleware
 
-Each file in the `middleware` directory defines functions that are used in the main process as Express middleware.
+Each file in the `middleware` directory defines functions that are used in the main process as [Express middleware](https://expressjs.com/en/guide/using-middleware.html).
 
 ### Main Process
 
