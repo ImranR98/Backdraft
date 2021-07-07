@@ -38,7 +38,7 @@
 - [x] Implement a `/change-password` endpoint that also optionally revokes all refresh tokens. Test it.
 - [x] Replace the hardcoded token secret and DB URI with environment variables.
 - [x] Update `README.md` with a breakdown of project structure, explaining the 3 layers (DB, controllers, routes) and anything else.
-- [ ] Implement a `/change-email` endpoint and test it.
+- [x] Implement a `/change-email` endpoint and test it.
 - [ ] Look into unit-testing. This line is vague as I have no idea what it entails. Tentative.
 - [ ] Look into logging. Line is vague for similar reasons as above. Tentative.
 - [ ] Decide whether to implement email verification and forgot password functionality. This one is a PITA; tentative.

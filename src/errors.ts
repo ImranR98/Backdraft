@@ -85,6 +85,18 @@ const getMessageForMongoError = (err: MongoError, defaultMessage: string) => {
     return message
 }
 
+// Get message if err is a Mongoose validation error
+const getMessageForValidationError = (err: any) => {
+    if (typeof err === 'object') {
+        if (typeof err.errors === 'object') {
+            const keys = Object.keys(err.errors)
+            if (keys.length > 0)
+                if (typeof err.errors[keys[0]].message === 'string') return err.errors[keys[0]].message
+        }
+    }
+    return null
+}
+
 // Converts any input into a standard error as best as possible
 const standardizeError = (err: any) => {
     console.error(err)
@@ -92,6 +104,11 @@ const standardizeError = (err: any) => {
     const error = new StandardError()
     if (typeof err === 'string') error.message = err
     if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)
+    const validationErrorMessage = getMessageForValidationError(err)
+    if (validationErrorMessage) {
+        error.errorCode = 'VALIDATION_ERROR'
+        error.message = validationErrorMessage
+    }
     return error
 }
 
