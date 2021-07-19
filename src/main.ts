@@ -2,11 +2,12 @@
 
 // Module imports
 import express from 'express'
-import mongoose from 'mongoose'
 import authRoutes from './routes/authRoutes'
 import { checkUser } from './middleware/authMiddleware'
 import { standardizeError } from './errors'
 import dotenv from 'dotenv'
+import mongoose from 'mongoose'
+import { Mockgoose } from 'mockgoose'
 
 // Load environment variables from .env if it exists
 dotenv.config()
@@ -42,7 +43,19 @@ if (!envValid) {
     process.exit()
 }
 
+// Function to connect to DB or test DB
+const connectDB = async () => {
+    if (process.env.NODE_ENV === 'test') {
+        const mockgoose = new Mockgoose(mongoose);
+        await mockgoose.prepareStorage()
+    }
+    await mongoose.connect(process.env.DB_CONN_STRING || '', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+}
+
 // Connect to DB and start server
-mongoose.connect(process.env.DB_CONN_STRING || '', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true }).then((result) =>
+connectDB().then(() =>
     app.listen(process.env.PORT || 8080, () => console.log(`Express server launched (port ${process.env.PORT || 8080})`))
 ).catch((err) => console.error(err))
+
+// Export app and connectDB for test suite to use
+export { app, connectDB }
