@@ -12,4 +12,6 @@ const validateStringArgs = (object: any, props: string[]) => {
     if (notPresent.length > 0) throw new StandardError(1, notPresent)
 }
 
+
+
 export { validateStringArgs }

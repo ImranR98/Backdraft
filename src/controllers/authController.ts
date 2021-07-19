@@ -17,8 +17,12 @@ const createToken = (id: string) => {
     })
 }
 
-// Hash passwords
-const hashPassword = async (password: string) => {
+// Checks that password satisfies requirements
+const isPasswordValid = (password: string) => password.length >= 6
+
+// Ensure the given password is valid then hash it
+const checkAndHashPassword = async (password: string) => {
+    if (!isPasswordValid(password)) throw new StandardError(8)
     const salt = await bcrypt.genSalt();
     return await bcrypt.hash(password, salt)
 }
@@ -45,7 +49,7 @@ const assignNewRefreshToken = async (userId: string, ip: string, userAgent: stri
 
 // Signup
 const signup = async (email: string, password: string) => {
-    await User.create({ email, password: await hashPassword(password) })
+    await User.create({ email, password: await checkAndHashPassword(password) })
 }
 
 // Login
@@ -68,7 +72,7 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
         { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } },
         { runValidators: true }
     )
-    return { user: user._id, token: createToken(user._id) }
+    return { token: createToken(user._id) }
 }
 
 // Get list of 'devices' (refresh token info)
@@ -95,7 +99,7 @@ const changePassword = async (userId: string, password: string, newPassword: str
     if (!user) throw new StandardError(5)
     const auth = await bcrypt.compare(password, user.password)
     if (!auth) throw new StandardError(7)
-    let changes: any = { password: await hashPassword(newPassword) }
+    let changes: any = { password: await checkAndHashPassword(newPassword) }
     if (revokeRefreshTokens) changes.refreshTokens = []
     await User.updateOne({ _id: userId }, { $set: changes }, { runValidators: true })
     if (revokeRefreshTokens) return { refreshToken: await assignNewRefreshToken(userId, ip, userAgent) } // If existing tokens were revoked, return a new one so client doesn't get logged out
