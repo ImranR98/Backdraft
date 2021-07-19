@@ -40,7 +40,7 @@
 - [x] Update `README.md` with a breakdown of project structure, explaining the 3 layers (DB, controllers, routes) and anything else.
 - [x] Implement a `/change-email` endpoint and test it.
 - [x] Look into unit-testing. ~~This line is vague as I have no idea what it entails. Tentative~~.
-- [ ] Finish writing tests
+- [x] Finish writing tests
 - [ ] Look into logging. Line is vague for similar reasons as above. Tentative.
 - [ ] Decide whether to implement email verification and forgot password functionality. This one is a PITA; tentative.
 

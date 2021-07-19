@@ -1,8 +1,27 @@
-# 🌐 NEMBack
+# 🔥 Backdraft
 
-A Node.js, Express, and MongoDB based web server that can be used as a template or starting off point for backend projects. Features JSON Web Token and refresh token based authentication
+Node.js, Express, and MongoDB based web server with simple user authentication, to be used as a template or starting off point for backend projects.
 
-Other technologies used:
+
+
+## Why
+Most web service backends share certain basic features — they usually involve exposing HTTP endpoints that allow for CRUD operations on a database, protected via some kind of authentication. Repeatedly implementing these basic features from scratch with each new project that shares the Node/Express/MongoDB tech stack is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue only regular JWTs with ridiculously long expiration times, leading to security risks and poorer UX. This project helps avoid such issues by providing a solid foundation that includes the basics right out of the box in a well documented, maintainable, and extensible way.
+
+> This is a work in progress, and that progress may be **S L O W** 😅 as this is a side project.
+
+
+
+## Features
+
+- A simple User model with email and password fields.
+- Authentication using JWT and refresh tokens.
+- Ability for authenticated users to manage their credentials and refresh tokens.
+- Automated testing for all API endpoints.
+
+
+
+## Other Technologies Used
+
 - TypeScript
 - Mongoose
 - Mocha
@@ -10,29 +29,14 @@ Other technologies used:
 - SuperTest
 - mongodb-memory-server
 
-## Why
-Most web service backends share certain basic features — they usually involve exposing HTTP endpoints that allow for CRUD operations on a database, protected via some kind of authentication.
 
-Most Node/Express/MongoDB based backends are obviously even more similar, and they share similar code at their base. Repeatedly implementing these basic features from scratch with each new project that shares this tech stack is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue only regular JWTs with ridiculously long expiration times, leading to security risks and poorer UX.
-
-This project helps avoid these issues. The goals are a logical structure, good documentation, maintainability, and extensibility.
-
-> This is a work in progress, and that progress may be **S L O W** 😅 as this is a hobby/side project.
-
-## Features
-
-- A simple User model with email and password fields.
-- The following authentication related functionality (with associated API endpoints):
-  - Users can sign up with email.
-  - Users can login to receive a JSON web token and a refresh token; these will be used for authentication.
-  - Users can request information about refresh tokens currently associated with their account. These are called 'logins', and the provided information includes the IP address from which a refresh token was last used, along with the user agent and date.
-  - Users can revoke any refresh token at will.
-  - Users can change their passwords and optionally revoke all existing refresh tokens when doing so.
 
 ## Setup/Usage
 1. Use `npm i` to install required dependencies.
 2. Create a copy of `template.env`, rename it to `.env`, and fill in the appropriate details. Alternatively, set up environment variables some other way.
 3. Test the project, build it for production, or run it in a development environment using the scripts defined in `package.json`.
+
+
 
 ## Project Structure
 
@@ -65,16 +69,20 @@ Each file in the `middleware` directory defines functions that are used in the m
 
 `helpers.ts` contains any simple, reusable helper functions that may be used in multiple files.
 
-### Testing
-Each `.test.ts` file in the `test` directory contains functional Mocha tests for a particular set of server endpoints. All root hook plugins are in `hooks.ts`.
-
-In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to a new, empty test database (in memory, using mongodb-memory-server). This also means that, for example, a test that requires the existence of a logged in user would need a signup and login to be done first in `before` or `beforeEach` hooks. While this does lead to repetition, it is the only way to keep tests independent.
-
 ### Main Process
 
 Code execution begins in `main.ts`. This file to prepares the server, connects to the DB, and starts the server.
 
 Implementing new functionality in the application usually involves creating the relevant models, then implementing a controller or some functions in an existing controller, then adding the necessary routes, then finally making sure the routes are imported in `connection.ts`. Appropriate tests should also be written before or after this.
+
+
+
+## Testing
+Each `.test.ts` file in the `test` directory contains functional Mocha tests for a particular set of server endpoints. All root hook plugins are in `hooks.ts`.
+
+In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to a new, empty test database (in memory, using mongodb-memory-server). This also means that, for example, a test that requires the existence of a logged in user would need a signup and login to be done first in `before` or `beforeEach` hooks. While this does lead to repetition, it is the only way to keep tests independent.
+
+
 
 ------
 
