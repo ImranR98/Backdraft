@@ -28,7 +28,7 @@ describe('Authentication related API tests', function () {
                     done()
                 }).catch((err) => done(err))
             })
-            it('With a password that is too short', function (done) {
+            it('With an invalid password', function (done) {
                 request(app).post('/signup').send({ email, password: '123' }).then((res) => {
                     expect(res.status).to.equal(401)
                     expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
@@ -163,27 +163,56 @@ describe('Authentication related API tests', function () {
 
         // Change password tests
         describe('Change password', function () {
-            it('With a valid current password and new password', function () {
-
+            it('With a valid current password and new password, not revoking existing tokens', function (done) {
+                request(app).post('/change-password').set('Authorization', `Bearer ${credentials.token}`).send({ password, newPassword: password + 'x' }).then((res) => {
+                    expect(res.status).to.equal(200)
+                    done()
+                }).catch((err) => done(err))
             })
-            it('With a valid current password and a new password that is too short', function () {
-
+            it('With a valid current password and new password, revoking existing tokens', function (done) {
+                request(app).post('/change-password').set('Authorization', `Bearer ${credentials.token}`).send({ password, newPassword: password + 'x', revokeRefreshTokens: true }).then((res) => {
+                    expect(res.status).to.equal(200)
+                    expect(res.body).to.have.property('refreshToken')
+                    done()
+                }).catch((err) => done(err))
             })
-            it('With an invalid current password and a valid new password', function () {
-
+            it('With a valid current password and an invalid new password', function (done) {
+                request(app).post('/change-password').set('Authorization', `Bearer ${credentials.token}`).send({ password, newPassword: '123' }).then((res) => {
+                    expect(res.status).to.equal(401)
+                    expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
+                    done()
+                }).catch((err) => done(err))
+            })
+            it('With an invalid current password and a valid new password', function (done) {
+                request(app).post('/change-password').set('Authorization', `Bearer ${credentials.token}`).send({ password: password + 'y', newPassword: password + 'x' }).then((res) => {
+                    expect(res.status).to.equal(401)
+                    expect(res.body).to.contain({ code: 'WRONG_PASSWORD' })
+                    done()
+                }).catch((err) => done(err))
             })
         })
 
         // Change password tests
         describe('Change email', function () {
-            it('With a valid current password and email', function () {
-
+            it('With a valid current password and email', function (done) {
+                request(app).post('/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: 'x' + email }).then((res) => {
+                    expect(res.status).to.equal(200)
+                    done()
+                }).catch((err) => done(err))
             })
-            it('With a valid current password and an invalid email', function () {
-
+            it('With a valid current password and an invalid email', function (done) {
+                request(app).post('/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: 'whoops' }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'VALIDATION_ERROR' })
+                    done()
+                }).catch((err) => done(err))
             })
-            it('With an invalid current password and a valid email', function () {
-
+            it('With an invalid current password and a valid email', function (done) {
+                request(app).post('/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password: password + 'x', newEmail: 'x' + email }).then((res) => {
+                    expect(res.status).to.equal(401)
+                    expect(res.body).to.contain({ code: 'WRONG_PASSWORD' })
+                    done()
+                }).catch((err) => done(err))
             })
         })
 

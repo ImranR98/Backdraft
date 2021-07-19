@@ -8,11 +8,13 @@ import { standardizeError } from './errors'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server'
+import helmet from 'helmet'
 
 // Prepare Express and middleware
 const app: express.Application = express()
 app.use(express.json())
 app.use(checkUser) // Always add user data from the JWT, if any, to the current request
+app.use(helmet())
 
 // Import routes
 app.use(authRoutes)
