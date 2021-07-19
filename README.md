@@ -74,7 +74,7 @@ In principle, each test should be fully independent and isolated from others. Th
 
 Code execution begins in `main.ts`. This file to prepares the server, connects to the DB, and starts the server.
 
-Implementing new functionality in the application usually involves creating the relevant models, then implementing a controller or some functions in an existing controller, then adding the necessary routes, then finally making sure the routes are imported in `connection.ts`.
+Implementing new functionality in the application usually involves creating the relevant models, then implementing a controller or some functions in an existing controller, then adding the necessary routes, then finally making sure the routes are imported in `connection.ts`. Appropriate tests should also be written before or after this.
 
 ------
 

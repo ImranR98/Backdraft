@@ -39,7 +39,7 @@ describe('Authentication related API tests', function () {
 
         // Login tests
         describe('Login', function () {
-            beforeEach(function (done) {
+            beforeEach('Login', function (done) {
                 request(app).post('/signup').send({ email, password }).then((res) => {
                     expect(res.status).to.equal(201)
                     done()
@@ -47,6 +47,7 @@ describe('Authentication related API tests', function () {
             })
             it('With valid credentials', function (done) {
                 request(app).post('/login').send({ email, password }).then((res) => {
+                    expect(res.status).to.equal(200)
                     expect(res.body).to.have.property('token')
                     expect(res.body).to.have.property('refreshToken')
                     done()
@@ -72,14 +73,15 @@ describe('Authentication related API tests', function () {
     describe('Tests that require a logged in user', function () {
         let credentials: { token: string, refreshToken: string } = { token: '', refreshToken: '' }
 
-        beforeEach(function (done) {
+        beforeEach('Sign up', function (done) {
             request(app).post('/signup').send({ email, password }).then((res) => {
                 expect(res.status).to.equal(201)
                 done()
             }).catch((err) => done(err))
         })
-        beforeEach(function (done) {
+        beforeEach('Login', function (done) {
             request(app).post('/login').send({ email, password }).then((res) => {
+                expect(res.status).to.equal(200)
                 expect(res.body).to.have.property('token')
                 expect(res.body).to.have.property('refreshToken')
                 credentials = res.body
@@ -91,6 +93,7 @@ describe('Authentication related API tests', function () {
         describe('Generate new JWT', function () {
             it('With a valid refresh token', function (done) {
                 request(app).post('/token').send({ refreshToken: credentials.refreshToken }).then((res) => {
+                    expect(res.status).to.equal(200)
                     expect(res.body).to.have.property('token')
                     done()
                 }).catch((err) => done(err))
@@ -106,9 +109,9 @@ describe('Authentication related API tests', function () {
 
         // Get logins test
         describe('Get logins', function () {
-            this.timeout(50000)
             it('Get logins', function (done) {
                 request(app).get('/logins').set('Authorization', `Bearer ${credentials.token}`).then((res) => {
+                    expect(res.status).to.equal(200)
                     expect(res.body).to.be.an('array').of.length.greaterThanOrEqual(1)
                     expect(res.body[0]).to.have.property('_id')
                     expect(res.body[0]).to.have.property('ip')
@@ -121,14 +124,40 @@ describe('Authentication related API tests', function () {
 
         // Revoke login tests
         describe('Revoke login', function () {
-            before(function () {
-                // Get logins first
+            let tokenId: string = ''
+            this.timeout('50000')
+            beforeEach('Get logins', function (done) {
+                request(app).get('/logins').set('Authorization', `Bearer ${credentials.token}`).then((res) => {
+                    expect(res.status).to.equal(200)
+                    expect(res.body).to.be.an('array').of.length.greaterThanOrEqual(1)
+                    expect(res.body[0]).to.have.property('_id')
+                    expect(res.body[0]).to.have.property('ip')
+                    expect(res.body[0]).to.have.property('userAgent')
+                    expect(res.body[0]).to.have.property('lastUsed')
+                    tokenId = res.body[0]._id
+                    done()
+                }).catch((err) => done(err))
             })
-            it('With a valid tokenId', function () {
-
+            it('With a valid tokenId', function (done) {
+                request(app).post('/revoke-login').set('Authorization', `Bearer ${credentials.token}`).send({ tokenId }).then((res) => {
+                    expect(res.status).to.equal(200)
+                    done()
+                }).catch((err) => done(err))
             })
-            it('With an invalid tokenId', function () {
-
+            it('With an invalid tokenId', function (done) {
+                request(app).post('/revoke-login').set('Authorization', `Bearer ${credentials.token}`).send({ tokenId: tokenId + 'x' }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'GENERAL_ERROR' })
+                    done()
+                }).catch((err) => done(err))
+            })
+            it('With a nonexistent tokenId', function (done) {
+                let replacementTokenId = tokenId.slice(0, -1) + (tokenId.slice(-1) === '1' ? '2' : '1')
+                request(app).post('/revoke-login').set('Authorization', `Bearer ${credentials.token}`).send({ tokenId: replacementTokenId }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'MISSING_ITEM' })
+                    done()
+                }).catch((err) => done(err))
             })
         })
 
