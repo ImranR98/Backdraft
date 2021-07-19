@@ -43,7 +43,8 @@ const connectDB = async () => {
         await mongoose.connect(process.env.DB_CONN_STRING || '', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
 }
 
-const diconnectDB = async () => await mongoose.disconnect()
+// Manual DB disconnect
+const disconnectDB = async () => await mongoose.disconnect()
 
 // Export app and connectDB for test suite to use
-export { app, ensureEnvVars, connectDB, diconnectDB }
+export { app, ensureEnvVars, connectDB, disconnectDB }

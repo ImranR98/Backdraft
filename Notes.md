@@ -39,7 +39,8 @@
 - [x] Replace the hardcoded token secret and DB URI with environment variables.
 - [x] Update `README.md` with a breakdown of project structure, explaining the 3 layers (DB, controllers, routes) and anything else.
 - [x] Implement a `/change-email` endpoint and test it.
-- [ ] Look into unit-testing. This line is vague as I have no idea what it entails. Tentative.
+- [x] Look into unit-testing. ~~This line is vague as I have no idea what it entails. Tentative~~.
+- [ ] Finish writing tests
 - [ ] Look into logging. Line is vague for similar reasons as above. Tentative.
 - [ ] Decide whether to implement email verification and forgot password functionality. This one is a PITA; tentative.
 
@@ -71,6 +72,3 @@ Sometimes, a user may manually log out (reasonable client software would destroy
 - All tokens that haven't been used in year are revoked.
 
 Is this the best way? Is the IP Express receives always accurate? What if a user has two identical user agents on the same network? In that case, would the IP I receive be accurate to the individual device or the network? If it is precise, do I need the 30 day limit? Why not revoke immediately?
-
-### Passing Tokens Between Tests
-Many API endpoints that require authentication token. Right now, the tokens recieved when testing `/login` are saved and re-used for any later tests of endpoints that need them. The issue is that this goes against the idea that tests should be isolated from each other. There is also a danger that, if this approach is used for all testing going forward, at some point a saved token may expire before a particular test suite is complete, causing tests to fail. The only alternative, though, is to login and get new tokens before every single test that needs it (using mocha's `beforeEach` hook); this is impractical as it ends up 'testing' `/login` several times and increases the runtime.

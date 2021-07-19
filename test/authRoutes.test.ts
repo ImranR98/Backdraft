@@ -1,11 +1,11 @@
+// Tests for API endpoints in authRoutes
+
 process.env.NODE_ENV = 'test'
 
 import { expect } from 'chai'
 import request from 'supertest'
 
 import { app } from '../src/connection'
-
-// signup, login, token, logins, revokeRefreshToken, changePassword, changeEmail
 
 const email = 'person@example.com'
 const password = 'greatpassword'
@@ -31,6 +31,12 @@ describe('Authentication related API tests', function () {
 
         // Login tests
         describe('Login', function () {
+            beforeEach(function (done) {
+                request(app).post('/signup').send({ email, password }).then((res) => {
+                    expect(res.status).to.equal(201)
+                    done()
+                }).catch((err) => done(err))
+            })
             it('With valid credentials', function (done) {
                 request(app).post('/login').send({ email, password }).then((res) => {
                     expect(res.body).to.have.property('token')
@@ -80,8 +86,10 @@ describe('Authentication related API tests', function () {
         })
 
         // Get logins test
-        it('Get logins', function () {
+        describe('Get logins', function () {
+            it('Get logins', function () {
 
+            })
         })
 
         // Revoke login tests

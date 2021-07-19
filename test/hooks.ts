@@ -1,10 +1,20 @@
-import { connectDB, ensureEnvVars } from '../src/connection';
+// Mocha root hook plugins for tests
 
-exports.mochaHooks = {
-    beforeEach: function(done: Function) {
+import { connectDB, disconnectDB, ensureEnvVars } from '../src/connection';
+import { RootHookObject } from 'mocha'
+
+const mochaHooks: RootHookObject = {
+    beforeEach: function (done: Function) {
         ensureEnvVars()
         connectDB().then(() => {
             done()
         }).catch(err => done(err))
+    },
+    afterEach: function (done: Function) {
+        disconnectDB().then(() => {
+            done()
+        }).catch(err => done(err))
     }
 }
+
+export { mochaHooks }
