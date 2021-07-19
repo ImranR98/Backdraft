@@ -9,12 +9,15 @@ import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import helmet from 'helmet'
+import morgan from 'morgan'
 
 // Prepare Express and middleware
 const app: express.Application = express()
 app.use(express.json())
 app.use(checkUser) // Always add user data from the JWT, if any, to the current request
 app.use(helmet())
+
+if (process.env.NODE_ENV === 'production') app.use(morgan('combined')) // Log requests in production
 
 // Import routes
 app.use(authRoutes)
