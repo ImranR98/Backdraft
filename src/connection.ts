@@ -14,14 +14,14 @@ const app: express.Application = express()
 app.use(express.json())
 app.use(checkUser) // Always add user data from the JWT, if any, to the current request
 
+// Import routes
+app.use(authRoutes)
+
 // Standardize any error before sending to the client
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     const error = standardizeError(err)
     res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
 })
-
-// Import routes
-app.use(authRoutes)
 
 // Ensures required environment variables exist
 const ensureEnvVars = () => {
