@@ -21,11 +21,19 @@ describe('Authentication related API tests', function () {
                     done()
                 }).catch((err) => done(err))
             })
-            it('With an invalid email', function () {
-
+            it('With an invalid email', function (done) {
+                request(app).post('/signup').send({ email: 'whoops', password }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'VALIDATION_ERROR' })
+                    done()
+                }).catch((err) => done(err))
             })
-            it('With an password that is too short', function () {
-
+            it('With a password that is too short', function (done) {
+                request(app).post('/signup').send({ email, password: '123' }).then((res) => {
+                    expect(res.status).to.equal(401)
+                    expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
+                    done()
+                }).catch((err) => done(err))
             })
         })
 
@@ -44,11 +52,19 @@ describe('Authentication related API tests', function () {
                     done()
                 }).catch((err) => done(err))
             })
-            it('With a nonexistent email', function () {
-
+            it('With a nonexistent email', function (done) {
+                request(app).post('/login').send({ email: 'ghost@example.com', password }).then((res) => {
+                    expect(res.status).to.equal(401)
+                    expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
+                    done()
+                }).catch((err) => done(err))
             })
-            it('With an incorrect password', function () {
-
+            it('With an incorrect password', function (done) {
+                request(app).post('/login').send({ email, password: password + 'x' }).then((res) => {
+                    expect(res.status).to.equal(401)
+                    expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
+                    done()
+                }).catch((err) => done(err))
             })
         })
     })
@@ -75,20 +91,31 @@ describe('Authentication related API tests', function () {
         describe('Generate new JWT', function () {
             it('With a valid refresh token', function (done) {
                 request(app).post('/token').send({ refreshToken: credentials.refreshToken }).then((res) => {
-                    const body = res.body
-                    expect(body).to.have.property('token')
+                    expect(res.body).to.have.property('token')
                     done()
                 }).catch((err) => done(err))
             })
-            it('With an invalid refresh token', function () {
-
+            it('With an invalid refresh token', function (done) {
+                request(app).post('/token').send({ refreshToken: credentials.refreshToken + 'x' }).then((res) => {
+                    expect(res.status).to.equal(401)
+                    expect(res.body).to.contain({ code: 'INVALID_REFRESH_TOKEN' })
+                    done()
+                }).catch((err) => done(err))
             })
         })
 
         // Get logins test
         describe('Get logins', function () {
-            it('Get logins', function () {
-
+            this.timeout(50000)
+            it('Get logins', function (done) {
+                request(app).get('/logins').set('Authorization', `Bearer ${credentials.token}`).then((res) => {
+                    expect(res.body).to.be.an('array').of.length.greaterThanOrEqual(1)
+                    expect(res.body[0]).to.have.property('_id')
+                    expect(res.body[0]).to.have.property('ip')
+                    expect(res.body[0]).to.have.property('userAgent')
+                    expect(res.body[0]).to.have.property('lastUsed')
+                    done()
+                }).catch((err) => done(err))
             })
         })
 

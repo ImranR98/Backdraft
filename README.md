@@ -66,7 +66,7 @@ Each file in the `middleware` directory defines functions that are used in the m
 `helpers.ts` contains any simple, reusable helper functions that may be used in multiple files.
 
 ### Testing
-Each `.test.ts` file in the `test` directory contains Mocha tests for a particular set of server endpoints. All root hook plugins are in `hooks.ts`.
+Each `.test.ts` file in the `test` directory contains functional Mocha tests for a particular set of server endpoints. All root hook plugins are in `hooks.ts`.
 
 In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to a new, empty test database (in memory, using mongodb-memory-server). This also means that, for example, a test that requires the existence of a logged in user would need a signup and login to be done first in `before` or `beforeEach` hooks. While this does lead to repetition, it is the only way to keep tests independent.
 

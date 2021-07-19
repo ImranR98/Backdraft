@@ -6,7 +6,7 @@
   "scripts": {
     "start": "tsc && node dist/main.js",
     "dev": "tsc -w & nodemon -q -w dist dist/main.js",
-    "build": "tsc",
+    "build": "npm test && tsc",
     "test": "mocha --recursive --exit --require ts-node/register --require test/hooks.ts test/*"
   },
   "keywords": [],

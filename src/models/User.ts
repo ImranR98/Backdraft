@@ -25,7 +25,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password not provided'],
-    minlength: [6, 'Password must be at least 12 characters'],
   },
   refreshTokens: [refreshTokenSchema]
 })

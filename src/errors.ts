@@ -47,6 +47,11 @@ class StandardError {
                 this.errorCode = 'WRONG_PASSWORD'
                 this.message = 'Password is incorrect'
                 break;
+            case 8:
+                this.httpCode = 401
+                this.errorCode = 'INVALID_PASSWORD'
+                this.message = 'Password does not fulfill requirements'
+                break;
             default:
                 this.httpCode = 400
                 this.errorCode = 'GENERAL_ERROR'
@@ -99,7 +104,7 @@ const getMessageForValidationError = (err: any) => {
 
 // Converts any input into a standard error as best as possible
 const standardizeError = (err: any) => {
-    console.error(err)
+    if (process.env.NODE_ENV !== 'test') console.error(err)
     if (err instanceof StandardError) return err
     const error = new StandardError()
     if (typeof err === 'string') error.message = err
