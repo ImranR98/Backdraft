@@ -72,3 +72,5 @@ Sometimes, a user may manually log out (reasonable client software would destroy
 
 Is this the best way? Is the IP Express receives always accurate? What if a user has two identical user agents on the same network? In that case, would the IP I receive be accurate to the individual device or the network? If it is precise, do I need the 30 day limit? Why not revoke immediately?
 
+### Passing Tokens Between Tests
+Many API endpoints that require authentication token. Right now, the tokens recieved when testing `/login` are saved and re-used for any later tests of endpoints that need them. The issue is that this goes against the idea that tests should be isolated from each other. There is also a danger that, if this approach is used for all testing going forward, at some point a saved token may expire before a particular test suite is complete, causing tests to fail. The only alternative, though, is to login and get new tokens before every single test that needs it (using mocha's `beforeEach` hook); this is impractical as it ends up 'testing' `/login` several times and increases the runtime.

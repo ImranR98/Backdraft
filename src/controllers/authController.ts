@@ -68,7 +68,7 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
         { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } },
         { runValidators: true }
     )
-    return { user: user._id, token: createToken(user._id) }
+    return { token: createToken(user._id) }
 }
 
 // Get list of 'devices' (refresh token info)
