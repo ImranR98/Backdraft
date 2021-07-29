@@ -42,7 +42,7 @@
 - [x] Look into unit-testing. ~~This line is vague as I have no idea what it entails. Tentative~~.
 - [x] Finish writing tests
 - [x] Look into logging. Line is vague for similar reasons as above. Tentative.
-- [ ] Add Morgan request logging and integrate it with Winston logging
+- [x] Add Morgan request logging and integrate it with Winston logging
 - [ ] Decide whether to implement email verification and forgot password functionality. This one is a PITA; tentative.
 
 

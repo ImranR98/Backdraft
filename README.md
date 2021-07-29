@@ -5,29 +5,21 @@ Node.js, Express, and MongoDB based web server with simple user authentication, 
 
 
 ## Why
-Most web service backends share certain basic features — they usually involve exposing HTTP endpoints that allow for CRUD operations on a database, protected via some kind of authentication. Repeatedly implementing these basic features from scratch with each new project that shares the Node/Express/MongoDB tech stack is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue only regular JWTs with ridiculously long expiration times, leading to security risks and poorer UX. This project helps avoid such issues by providing a solid foundation that includes the basics right out of the box in a well documented, maintainable, and extensible way.
+Most web service backends share certain basic features — they usually involve exposing HTTP endpoints that allow for CRUD operations on a database, protected via some kind of authentication.
 
-> This is a work in progress, and that progress may be **S L O W** 😅 as this is a side project.
+Repeatedly implementing these basic features from scratch with each new project, especially when your projects share the same stack, is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue only regular JWTs with ridiculously long expiration times, leading to security risks and poorer UX. Additionally, features like automated testing and logging are often skipped to save time.
+
+This project helps avoid such issues by providing a solid foundation that includes the basics right out of the box in a well documented, maintainable, and extensible way.
 
 
 
 ## Features
 
-- A simple User model with email and password fields.
-- Authentication using JWT and refresh tokens.
+- User authentication using JWT and refresh tokens.
 - Ability for authenticated users to manage their credentials and refresh tokens.
-- Automated testing for all API endpoints.
-
-
-
-## Other Technologies Used
-
-- TypeScript
-- Mongoose
-- Mocha
-- Chai
-- SuperTest
-- mongodb-memory-server
+- Automated testing for all API endpoints using Mocha, Chai, SuperTest, and mongodb-memory-server.
+- Standardized logging using Winston and Morgan.
+- Mongoose and TypeScript used for easier database querying and increased type safety.
 
 
 
@@ -68,6 +60,8 @@ Each file in the `middleware` directory defines functions that are used in the m
 `errors.ts` defines a standardized error object with predefined messages, along with code to convert any error received into this standard form. Only these standardized errors should be sent to the client.
 
 `helpers.ts` contains any simple, reusable helper functions that may be used in multiple files.
+
+`logger.ts` configures and exports a Winston logger object that outputs to the console.
 
 ### Main Process
 
