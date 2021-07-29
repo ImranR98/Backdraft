@@ -1,6 +1,7 @@
 // Error standardization code
 
 import { MongoError } from 'mongodb'
+import logger from './logger'
 
 // Define a standard error object that can be sent to client
 class StandardError {
@@ -58,6 +59,7 @@ class StandardError {
                 this.message = 'Something went wrong'
                 break;
         }
+        if (process.env.NODE_ENV !== 'test') logger.debug(this)
     }
 }
 
@@ -104,8 +106,8 @@ const getMessageForValidationError = (err: any) => {
 
 // Converts any input into a standard error as best as possible
 const standardizeError = (err: any) => {
-    if (process.env.NODE_ENV !== 'test') console.error(err)
     if (err instanceof StandardError) return err
+    if (process.env.NODE_ENV !== 'test') logger.error(err)
     const error = new StandardError()
     if (typeof err === 'string') error.message = err
     if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)

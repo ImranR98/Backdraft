@@ -4,8 +4,8 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
-    "start": "tsc && node dist/main.js",
-    "dev": "tsc -w & nodemon -q -w dist dist/main.js",
+    "start": "NODE_ENV=production tsc && node dist/main.js",
+    "dev": "NODE_ENV=development nodemon -w 'src/**/*.ts' -x 'ts-node' src/main.ts",
     "build": "npm test && tsc",
     "test": "mocha --exit --require ts-node/register --require test/hooks.ts test/*.test.ts"
   },
@@ -20,8 +20,8 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.12",
     "morgan": "^1.10.0",
-    "ts-node": "^10.1.0",
-    "validator": "^13.6.0"
+    "validator": "^13.6.0",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
@@ -39,6 +39,7 @@
     "mongodb-memory-server": "^7.2.1",
     "nodemon": "^2.0.7",
     "supertest": "^6.1.3",
+    "ts-node": "^10.1.0",
     "typescript": "^4.3.2"
   }
 }

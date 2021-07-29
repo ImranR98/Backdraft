@@ -9,15 +9,19 @@ import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import helmet from 'helmet'
+import logger from './logger'
 import morgan from 'morgan'
+
+// Import env. vars
+dotenv.config()
 
 // Prepare Express and middleware
 const app: express.Application = express()
 app.use(express.json())
 app.use(checkUser) // Always add user data from the JWT, if any, to the current request
-app.use(helmet())
-
-if (process.env.NODE_ENV === 'production') app.use(morgan('combined')) // Log requests in production
+app.use(helmet()) // Helmet sets some HTTP headers that are recommended for security
+if (process.env.NODE_ENV === 'production') // If in production, log requests
+    app.use(morgan('combined', { stream: { write: (message) => logger.http(message.replace('\n', '')) } }))
 
 // Import routes
 app.use(authRoutes)
@@ -31,7 +35,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Ensures required environment variables exist
 const ensureEnvVars = () => {
     const envRequirements = ['JWT_KEY', 'DB_CONN_STRING']
-    dotenv.config()
     let envValid = true
     for (let i = 0; i < envRequirements.length && envValid; i++) {
         if (typeof process.env[envRequirements[i]] !== 'string') envValid = false
