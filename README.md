@@ -80,4 +80,4 @@ In principle, each test should be fully independent and isolated from others. Th
 
 ------
 
-Detailed notes, including progress, planning, and concerns, are in [Notes.md](./Notes.md).
+Current concerns, ideas, and other notes are in [Notes.md](./Notes.md).
