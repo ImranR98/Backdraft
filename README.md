@@ -7,7 +7,7 @@ Node.js, Express, and MongoDB based web server with simple user authentication, 
 ## Why
 Most web service backends share certain basic features — they usually involve exposing HTTP endpoints that allow for CRUD operations on a database, protected via some kind of authentication.
 
-Repeatedly implementing these basic features from scratch with each new project, especially when your projects share the same stack, is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue only regular JWTs with ridiculously long expiration times, leading to security risks and poorer UX. Additionally, features like automated testing and logging are often skipped to save time.
+Repeatedly implementing these basic features from scratch with each new project, especially when your projects share the same stack, is a waste of time and can lead to rushed or inconsistent code. For example, a common mistake or shortcut is to avoid using refresh tokens for authentication, and to instead issue only regular JWTs with ridiculously long expiration times, leading to security risks and poorer UX. Additionally, features like automated testing, logging, and email verification are often skipped to save time.
 
 This project helps avoid such issues by providing a solid foundation that includes the basics right out of the box in a well documented, maintainable, and extensible way.
 
@@ -20,12 +20,13 @@ This project helps avoid such issues by providing a solid foundation that includ
 - Automated testing for all API endpoints using Mocha, Chai, SuperTest, and mongodb-memory-server.
 - Standardized logging using Winston and Morgan.
 - Mongoose and TypeScript used for easier database querying and increased type safety.
+- User email verification and "forgot password" functionality enabled by Nodemailer.
 
 
 
 ## Setup/Usage
 1. Use `npm i` to install required dependencies.
-2. Create a copy of `template.env`, rename it to `.env`, and fill in the appropriate details. Alternatively, set up environment variables some other way.
+2. Create a copy of `template.env`, rename it to `.env`, and fill in the appropriate details as described in that file. Refer to the `dotenv` [documentation](https://www.npmjs.com/package/dotenv) for details on how this works. Alternatively, set up environment variables some other way.
 3. Test the project, build it for production, or run it in a development environment using the scripts defined in `package.json`.
 
 
@@ -54,9 +55,9 @@ Like controllers (see above), these are grouped into files based on a shared the
 
 Each file in the `middleware` directory defines functions that are used in the main process as [Express middleware](https://expressjs.com/en/guide/using-middleware.html).
 
-### Funcs
+### Other Functions
 
-This directory contains all other code (aside from `main.ts`) needed for the server to run, divided into several files according to functionality.
+The `funcs` directory contains all other code (aside from `main.ts`) needed for the server to run, divided into several files according to functionality.
 
 Some of what this covers:
 - Functions to connect to the DB
@@ -72,6 +73,8 @@ Any code that does not fit into the other directories or `main.ts` should go her
 
 Code execution begins in `main.ts`. This file runs some checks, then starts the server.
 
+
+
 ## Typical Flow for Implementing New Features
 
 Implementing new functionality in the application usually involves:
@@ -80,6 +83,8 @@ Implementing new functionality in the application usually involves:
 3. Adding the necessary route(s)
 4. Making sure the route(s) are imported in `express.ts`
 5. Writing the appropriate test(s)
+
+
 
 ## Testing
 Each `.test.ts` file in the `test` directory contains functional Mocha tests for a particular set of server endpoints. All root hook plugins are in `hooks.ts`.
