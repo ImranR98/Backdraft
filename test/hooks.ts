@@ -1,6 +1,7 @@
 // Mocha root hook plugins for tests
 
-import { connectDB, disconnectDB, ensureEnvVars } from '../src/connection';
+import { ensureEnvVars } from '../src/validation'
+import { connectDB, disconnectDB } from '../src/db'
 import { RootHookObject } from 'mocha'
 
 const mochaHooks: RootHookObject = {

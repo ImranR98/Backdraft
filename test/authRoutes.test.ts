@@ -5,7 +5,7 @@ process.env.NODE_ENV = 'test'
 import { expect } from 'chai'
 import request from 'supertest'
 
-import { app } from '../src/connection'
+import { app } from '../src/express'
 
 const email = 'person@example.com'
 const password = 'greatpassword'

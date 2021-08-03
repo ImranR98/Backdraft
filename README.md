@@ -54,7 +54,7 @@ Like controllers (see above), these are grouped into files based on a shared the
 
 Each file in the `middleware` directory defines functions that are used in the main process as [Express middleware](https://expressjs.com/en/guide/using-middleware.html).
 
-### Other Files
+### Other Files TODO: Update
 `connection.ts` configures the Express app object and exports it, along with functions used to validate environment variables and connect/disconnect to/from the database.
 
 `errors.ts` defines a standardized error object with predefined messages, along with code to convert any error received into this standard form. Only these standardized errors should be sent to the client.

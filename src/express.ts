@@ -1,4 +1,4 @@
-// Express Server Configuration and DB Connection
+// Express Server Configuration
 
 // Module imports
 import express from 'express'
@@ -6,8 +6,6 @@ import authRoutes from './routes/authRoutes'
 import { checkUser } from './middleware/authMiddleware'
 import { standardizeError } from './errors'
 import dotenv from 'dotenv'
-import mongoose from 'mongoose'
-import { MongoMemoryServer } from 'mongodb-memory-server'
 import helmet from 'helmet'
 import logger from './logger'
 import morgan from 'morgan'
@@ -32,27 +30,5 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
 })
 
-// Ensures required environment variables exist
-const ensureEnvVars = () => {
-    const envRequirements = ['JWT_KEY', 'DB_CONN_STRING']
-    let envValid = true
-    for (let i = 0; i < envRequirements.length && envValid; i++) {
-        if (typeof process.env[envRequirements[i]] !== 'string') envValid = false
-        else if (process.env[envRequirements[i]]?.length === 0) envValid = false
-    }
-    if (!envValid) throw 'One or more environment variables are missing!'
-}
-
-// Connects to DB or test DB
-const connectDB = async () => {
-    if (process.env.NODE_ENV === 'test')
-        await mongoose.connect((await MongoMemoryServer.create()).getUri(), { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
-    else
-        await mongoose.connect(process.env.DB_CONN_STRING || '', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
-}
-
-// Manual DB disconnect
-const disconnectDB = async () => await mongoose.disconnect()
-
 // Export app and connectDB for test suite to use
-export { app, ensureEnvVars, connectDB, disconnectDB }
+export { app }
