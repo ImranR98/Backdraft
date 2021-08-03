@@ -27,7 +27,7 @@ const createTransport = async () => {
 // Send an email
 const sendEmail = async (to: string, subject: string, text: string, html: string) => {
     await (await createTransport()).sendMail({
-        from: process.env.EMAIL_SENDER,
+        from: process.env.SENDER_EMAIL,
         to, subject, text, html
     })
 }
