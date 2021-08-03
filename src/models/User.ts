@@ -26,7 +26,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password not provided'],
   },
-  refreshTokens: [refreshTokenSchema]
+  refreshTokens: [refreshTokenSchema],
+  verificationCode: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  verified: {
+    type: Boolean,
+    default: false
+  }
 })
 
 // Define and export the model

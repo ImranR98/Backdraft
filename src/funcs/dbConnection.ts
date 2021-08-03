@@ -1,12 +1,8 @@
 // DB Connection functions
 
 // Module imports
-import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server'
-
-// Import env. vars (assumes they exist; should have been checked on server start)
-dotenv.config()
 
 // Connects to DB or test DB
 const connectDB = async () => {

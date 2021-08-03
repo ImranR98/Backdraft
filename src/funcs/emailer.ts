@@ -1,10 +1,6 @@
 // Functions related to sending emails
 
-import dotenv from 'dotenv'
 import nodemailer from 'nodemailer'
-
-// Import env. vars (assumes they exist; should have been checked on server start)
-dotenv.config()
 
 // Creates a nodemailer transport or test transport
 const createTransport = async () => {

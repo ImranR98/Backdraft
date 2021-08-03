@@ -53,6 +53,21 @@ class StandardError {
                 this.errorCode = 'INVALID_PASSWORD'
                 this.message = 'Password does not fulfill requirements'
                 break;
+            case 9:
+                this.httpCode = 400
+                this.errorCode = 'INVALID_VERIFICATION_KEY'
+                this.message = 'Email verification key is invalid'
+                break;
+            case 10:
+                this.httpCode = 400
+                this.errorCode = 'USER_ALREADY_VERIFIED'
+                this.message = 'You are already verified'
+                break;
+            case 11:
+                this.httpCode = 400
+                this.errorCode = 'USER_NOT_VERIFIED'
+                this.message = 'You must verify your email first'
+                break;
             default:
                 this.httpCode = 400
                 this.errorCode = 'GENERAL_ERROR'

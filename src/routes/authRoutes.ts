@@ -20,6 +20,18 @@ router.post('/signup',
     }
 )
 
+router.post('/verifyEmail',
+    async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        try {
+            validateStringArgs(req.body, ['verificationCode'])
+            await authController.verifyEmail(req.body.verificationCode)
+            res.status(201).send()
+        } catch (err) {
+            next(err)
+        }
+    }
+)
+
 router.post('/login',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
