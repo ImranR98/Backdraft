@@ -3,6 +3,7 @@
 import dotenv from 'dotenv'
 import nodemailer from 'nodemailer'
 
+// Import env. vars (assumes they exist; should have been checked on server start)
 dotenv.config()
 
 // Creates a nodemailer transport or test transport
@@ -23,4 +24,12 @@ const createTransport = async () => {
     }
 }
 
-export { createTransport }
+// Send an email
+const sendEmail = async (to: string, subject: string, text: string, html: string) => {
+    await (await createTransport()).sendMail({
+        from: process.env.EMAIL_SENDER,
+        to, subject, text, html
+    })
+}
+
+export { createTransport, sendEmail }

@@ -3,6 +3,7 @@
 import winston from 'winston'
 import dotenv from 'dotenv'
 
+// Import env. vars (assumes they exist; should have been checked on server start)
 dotenv.config()
 
 const logger = winston.createLogger({

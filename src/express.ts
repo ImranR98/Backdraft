@@ -10,7 +10,7 @@ import helmet from 'helmet'
 import logger from './logger'
 import morgan from 'morgan'
 
-// Import env. vars
+// Import env. vars (assumes they exist; should have been checked on server start)
 dotenv.config()
 
 // Prepare Express and middleware

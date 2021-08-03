@@ -5,7 +5,7 @@ import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
-// Import env. vars
+// Import env. vars (assumes they exist; should have been checked on server start)
 dotenv.config()
 
 // Connects to DB or test DB

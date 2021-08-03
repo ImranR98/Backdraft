@@ -6,7 +6,10 @@ import { ensureEnvVars } from './validation'
 import { createTransport } from './email'
 import logger from './logger'
 
+// Check that env. vars. exist
 ensureEnvVars()
+
+// Verify the DB connection and email configuration, then start the server
 connectDB().then(() => {
     createTransport().then((transporter) => {
         transporter.verify().then(() =>
