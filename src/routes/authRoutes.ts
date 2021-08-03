@@ -4,7 +4,7 @@ import { Router } from 'express'
 import { requireAuth } from '../middleware/authMiddleware'
 import authController from '../controllers/authController'
 import express from 'express'
-import { validateStringArgs } from '../validation'
+import { validateStringArgs } from '../funcs/validators'
 
 const router = Router()
 

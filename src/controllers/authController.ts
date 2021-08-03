@@ -5,7 +5,7 @@ import User from '../models/User'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import { StandardError } from '../errors'
+import { StandardError } from '../funcs/errors'
 
 // Duration of JWT
 const maxAge = 5 * 60 // 15 minutes

@@ -54,22 +54,32 @@ Like controllers (see above), these are grouped into files based on a shared the
 
 Each file in the `middleware` directory defines functions that are used in the main process as [Express middleware](https://expressjs.com/en/guide/using-middleware.html).
 
-### Other Files TODO: Update
-`connection.ts` configures the Express app object and exports it, along with functions used to validate environment variables and connect/disconnect to/from the database.
+### Funcs
 
-`errors.ts` defines a standardized error object with predefined messages, along with code to convert any error received into this standard form. Only these standardized errors should be sent to the client.
+This directory contains all other code (aside from `main.ts`) needed for the server to run, divided into several files according to functionality.
 
-`helpers.ts` contains any simple, reusable helper functions that may be used in multiple files.
+Some of what this covers:
+- Functions to connect to the DB
+- Functions to send emails
+- Functions to standardize errors for the client
+- The Express `app` object with its configuration
+- The Winston logger
+- Various validation functions related to user input and environment variables
 
-`logger.ts` configures and exports a Winston logger object that outputs to the console.
+Any code that does not fit into the other directories or `main.ts` should go here.
 
 ### Main Process
 
-Code execution begins in `main.ts`. This file to prepares the server, connects to the DB, and starts the server.
+Code execution begins in `main.ts`. This file runs some checks, then starts the server.
 
-Implementing new functionality in the application usually involves creating the relevant models, then implementing a controller or some functions in an existing controller, then adding the necessary routes, then finally making sure the routes are imported in `connection.ts`. Appropriate tests should also be written before or after this.
+## Typical Flow for Implementing New Features
 
-
+Implementing new functionality in the application usually involves:
+1. Creating the relevant DB model(s)
+2. Implementing the relevant controller(s) or controller function(s)
+3. Adding the necessary route(s)
+4. Making sure the route(s) are imported in `express.ts`
+5. Writing the appropriate test(s)
 
 ## Testing
 Each `.test.ts` file in the `test` directory contains functional Mocha tests for a particular set of server endpoints. All root hook plugins are in `hooks.ts`.

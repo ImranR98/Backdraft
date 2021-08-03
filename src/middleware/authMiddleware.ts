@@ -5,7 +5,7 @@
 import jwt, { VerifyErrors } from 'jsonwebtoken'
 import User from '../models/User'
 import express from 'express'
-import { StandardError } from '../errors'
+import { StandardError } from '../funcs/errors'
 
 // Parse raw token (remove 'Bearer')
 const trimToken = (token: string | undefined) => {

@@ -2,8 +2,8 @@
 
 // Module imports
 import express from 'express'
-import authRoutes from './routes/authRoutes'
-import { checkUser } from './middleware/authMiddleware'
+import authRoutes from '../routes/authRoutes'
+import { checkUser } from '../middleware/authMiddleware'
 import { standardizeError } from './errors'
 import dotenv from 'dotenv'
 import helmet from 'helmet'

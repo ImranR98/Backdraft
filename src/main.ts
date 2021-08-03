@@ -1,10 +1,10 @@
 // Main Express server
 
-import { app } from './express'
-import { connectDB } from './db'
-import { ensureEnvVars } from './validation'
-import { createTransport } from './email'
-import logger from './logger'
+import { app } from './funcs/express'
+import { connectDB } from './funcs/dbConnection'
+import { ensureEnvVars } from './funcs/validators'
+import { createTransport } from './funcs/emailer'
+import logger from './funcs/logger'
 
 // Verify the environment variables, DB connection, and email configuration, then start the server
 const startServer = async () => {
