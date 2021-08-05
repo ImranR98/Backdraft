@@ -67,10 +67,10 @@ const startEmailVerification = async (userId: string, newEmail: string, hostUrl:
         verificationKey = existingEmailToken.verificationKey
     }
     await sendEmail(newEmail, 'Email Verification Key',
-        `To verify this email, go to ${hostUrl}/verifyEmail/${verificationKey}.`,
+        `To verify this email, go to ${hostUrl}/verify-email/${verificationKey}.`,
         `<p>Hi, thanks for signing up!</p>
-<p>Click <a href="${hostUrl}/verifyEmail/${verificationKey}">here</a> to verify your email.</p>
-<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verifyEmail/${verificationKey}">${hostUrl}/verifyEmail/${verificationKey}</a></b></small></p>`
+<p>Click <a href="${hostUrl}/verify-email/${verificationKey}">here</a> to verify your email.</p>
+<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verify-email/${verificationKey}">${hostUrl}/verify-email/${verificationKey}</a></b></small></p>`
     )
 }
 
@@ -102,7 +102,7 @@ const login = async (email: string, password: string, ip: string, userAgent: str
     if (!user) throw new StandardError(2)
     const auth = await bcrypt.compare(password, user.password)
     if (!auth) throw new StandardError(2)
-    if (!user.verified) throw new StandardError(11)
+    if (!user.email) throw new StandardError(11)
     const refreshToken = await assignNewRefreshToken(user._id, ip, userAgent)
     return { token: createToken(user._id), refreshToken }
 }

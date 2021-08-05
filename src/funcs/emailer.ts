@@ -1,11 +1,13 @@
 // Functions related to sending emails
 
 import nodemailer from 'nodemailer'
+import logger from './logger'
 
 // Creates a nodemailer transport or test transport
 const createTransport = async () => {
     if (process.env.NODE_ENV === 'test') {
         const testAccount = await nodemailer.createTestAccount()
+        logger.log('info', `Ethereal Email account info: User: ${testAccount.user}, Pass: ${testAccount.pass}`)
         return nodemailer.createTransport({
             host: 'smtp.ethereal.email',
             port: 587,
