@@ -2,6 +2,7 @@
 // Provides all major functions related to authentication (also tangentially related ones like the 'logins' function)
 
 import User from '../models/User'
+import EmailToken from '../models/EmailToken'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
@@ -48,24 +49,51 @@ const assignNewRefreshToken = async (userId: string, ip: string, userAgent: stri
     return refreshToken
 }
 
-// Signup
-const signup = async (email: string, password: string) => {
-    let verificationCode = ''
-    for (let i = 0; i < 6; i++) verificationCode += Math.floor(Math.random() * 10).toString()
-    await User.create({ email, password: await checkAndHashPassword(password), verificationCode })
-    const readableVerificationCode = `${verificationCode.slice(0,3)} ${verificationCode.slice(3)}`
-    await sendEmail(email, 'Email Verification Code',
-        `Your verification code is ${readableVerificationCode}.`,
-        `<p>Hi, thanks for signing up!</p><p>Your verification code is <b><i>${readableVerificationCode}</i></b>.</p>`
+// Generates an EmailToken (or appropriates an existing one)
+const startEmailVerification = async (userId: string, newEmail: string, hostUrl: string) => {
+    const existingEmailUser = await User.findOne({ email: newEmail })
+    if (existingEmailUser) throw new StandardError(12)
+    const existingEmailToken = await EmailToken.findOne({ email: newEmail })
+    let verificationKey = null
+    if (!existingEmailToken) {
+        await EmailToken.deleteMany({ user: userId }) // If this user had another unverified email, they clearly don't want it anymore
+        verificationKey = crypto.randomBytes(64).toString('hex')
+        await EmailToken.create({ email: newEmail, user: userId, verificationKey })
+    } else {
+        if (existingEmailToken.user !== userId) { // If someone else tried verifying this but didn't, too bad for them, the token is re-assigned
+            await EmailToken.deleteMany({ user: userId })
+            await EmailToken.updateOne({ _id: existingEmailToken._id }, { $set: { user: userId } }, { runValidators: true })
+        }
+        verificationKey = existingEmailToken.verificationKey
+    }
+    await sendEmail(newEmail, 'Email Verification Key',
+        `To verify this email, go to ${hostUrl}/verifyEmail/${verificationKey}.`,
+        `<p>Hi, thanks for signing up!</p>
+<p>Click <a href="${hostUrl}/verifyEmail/${verificationKey}">here</a> to verify your email.</p>
+<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verifyEmail/${verificationKey}">${hostUrl}/verifyEmail/${verificationKey}</a></b></small></p>`
     )
 }
 
-// Verify email
-const verifyEmail = async (verificationCode: string) => {
-    const user = await User.findOne({ verificationCode })
-    if (!user) throw new StandardError(9)
-    if (user.verified) throw new StandardError(10)
-    await User.updateOne({ _id: user._id }, { $set: { verified: true } }, { runValidators: true })
+// Validate an EmailToken and update the user's email
+const verifyEmail = async (verificationKey: string) => {
+    const emailToken = await EmailToken.findOne({ verificationKey })
+    if (!emailToken) throw new StandardError(9)
+    await User.updateOne({ _id: emailToken.user }, { $set: { email: emailToken.email } }, { runValidators: true })
+}
+
+// Signup
+const signup = async (email: string, password: string, hostUrl: string) => {
+    const user = await User.create({ email: null, password: await checkAndHashPassword(password) })
+    await startEmailVerification(user._id, email, hostUrl)
+}
+
+// Change email
+const changeEmail = async (userId: string, password: string, newEmail: string, hostUrl: string) => { // TODO: Changed email must also be verified
+    const user = await User.findOne({ _id: userId })
+    if (!user) throw new StandardError(5)
+    const auth = await bcrypt.compare(password, user.password)
+    if (!auth) throw new StandardError(7)
+    await startEmailVerification(userId, newEmail, hostUrl)
 }
 
 // Login
@@ -120,15 +148,6 @@ const changePassword = async (userId: string, password: string, newPassword: str
     if (revokeRefreshTokens) changes.refreshTokens = []
     await User.updateOne({ _id: userId }, { $set: changes }, { runValidators: true })
     if (revokeRefreshTokens) return { refreshToken: await assignNewRefreshToken(userId, ip, userAgent) } // If existing tokens were revoked, return a new one so client doesn't get logged out
-}
-
-// Change email
-const changeEmail = async (userId: string, password: string, newEmail: string) => { // TODO: Changed email must also be verified
-    const user = await User.findOne({ _id: userId })
-    if (!user) throw new StandardError(5)
-    const auth = await bcrypt.compare(password, user.password)
-    if (!auth) throw new StandardError(7)
-    await User.updateOne({ _id: userId }, { $set: { email: newEmail } }, { runValidators: true })
 }
 
 // TODO: Forgot password

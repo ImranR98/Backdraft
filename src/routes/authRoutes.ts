@@ -12,7 +12,7 @@ router.post('/signup',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['email', 'password'])
-            await authController.signup(req.body.email, req.body.password)
+            await authController.signup(req.body.email, req.body.password, req.headers.host || '')
             res.status(201).send()
         } catch (err) {
             next(err)
@@ -90,7 +90,7 @@ router.post('/change-email', requireAuth,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['password', 'newEmail'])
-            await authController.changeEmail(res.locals.user._id, req.body.password, req.body.newEmail)
+            await authController.changeEmail(res.locals.user._id, req.body.password, req.body.newEmail, req.headers.host || '')
             res.status(200).send()
         } catch (err) {
             next(err)

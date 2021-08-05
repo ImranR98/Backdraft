@@ -68,6 +68,11 @@ class StandardError {
                 this.errorCode = 'USER_NOT_VERIFIED'
                 this.message = 'You must verify your email first'
                 break;
+            case 12:
+                this.httpCode = 400
+                this.errorCode = 'EMAIL_IN_USE'
+                this.message = 'That email is already in use'
+                break;
             default:
                 this.httpCode = 400
                 this.errorCode = 'GENERAL_ERROR'

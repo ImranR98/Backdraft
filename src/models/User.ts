@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email not provided'],
-    unique: true,
+    index: { unique: true, sparse: true },
     lowercase: true,
     validate: [validator.isEmail, 'Email is invalid']
   },
@@ -26,16 +26,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password not provided'],
   },
-  refreshTokens: [refreshTokenSchema],
-  verificationCode: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  verified: {
-    type: Boolean,
-    default: false
-  }
+  refreshTokens: [refreshTokenSchema]
 })
 
 // Define and export the model

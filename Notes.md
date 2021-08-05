@@ -30,6 +30,8 @@ The second approach is more complex as it requries the server to know where the 
 
 A third option is to send the user the unique key itself, without embedding it in some link. This means the client will have to deal with presenting a UI that lets the user manually type or copy/paste the code after receiving the email. It is less user friendly, but is client agnostic and shouldn't be too cumbersome if the key is short (which is okay as keys are tied to individual accounts and do not need to be univerally unique). This is the path taken for now.
 
+**TODO: Above is no longer true. Change.**
+
 # Other Notes
 
 
