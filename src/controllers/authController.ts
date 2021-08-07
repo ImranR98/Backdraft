@@ -2,118 +2,71 @@
 // Provides all major functions related to authentication (also tangentially related ones like the 'logins' function)
 
 import User from '../models/User'
-import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { StandardError } from '../funcs/errors'
 import { sendEmail } from '../funcs/emailer'
+import { createJWT, decodeToken } from '../funcs/validators'
 
-// Contains 3 functions related to email verification; these can't be merged into 1 as they are used differently in signup vs change-email
-const emailVerification = {
-    // Clear the way for an email to be verified by a user (or no user) if possible and return result code
-    prepare: async (email: string, userId: string | null = null) => {
-        const existingEmailUser = await User.findOne({ email })
-
-        if (existingEmailUser) {
-            if (userId === existingEmailUser._id.toString()) {
-                if (!existingEmailUser.pendingVerification)
-                    return 2 // Already verified
-                else if (existingEmailUser.pendingVerification.email === email)
-                    return 1 // Resend existing verification
-            } else {
-                if (!existingEmailUser.pendingVerification)
-                    return 3 // Email in use
-                else if (existingEmailUser.pendingVerification.email === email)
-                    await User.deleteOne({ _id: existingEmailUser._id })
-                else
-                    return 3 // Email in use
-            }
-        }
-
-        const existingPendingVerificationUsers = await User.find({ "pendingVerification.email": email })
-
-        if (existingPendingVerificationUsers.length > 0) {
-            for (let i = 0; i < existingPendingVerificationUsers.length; i++) {
-                if (existingPendingVerificationUsers[i].pendingVerification.email !== existingPendingVerificationUsers[i].email) {
-                    if (userId === existingPendingVerificationUsers[i]._id.toString())
-                        return 1 // Resend existing verification
-                    else
-                        await User.updateOne({ _id: existingPendingVerificationUsers[i]._id }, { $set: { pendingVerification: null } }, { runValidators: true })
-                }
-            }
-        }
-
-        return 0 // Safe to verify
-    },
-    throwErrors: (preparationResult: number) => {
-        switch (preparationResult) {
-            case 2:
+// Clear the way for an email to be assigned to a user if possible
+const prepareForEmailVerification = async (email: string, userId: string | null = null) => {
+    const existingEmailUser = await User.findOne({ email })
+    if (existingEmailUser) {
+        if (userId === existingEmailUser._id.toString()) {
+            if (existingEmailUser.verified)
                 throw new StandardError(10)
-                break;
-            case 3:
+        } else {
+            if (existingEmailUser.verified)
                 throw new StandardError(12)
-                break;
+            else
+                await User.deleteOne({ _id: existingEmailUser._id })
         }
-    },
-    // Interpret result code from prepare function and create email verification accordingly
-    beginVerification: async (userId: string, email: string, preparationResult: number, hostUrl: string) => {
-        let key = null
-        switch (preparationResult) {
-            case 0:
-                key = crypto.randomBytes(64).toString('hex')
-                break;
-            case 1:
-                key = await User.findOne({ _id: userId }).pendingVerification.key
-                break;
-            case 2:
-                throw new StandardError(10)
-                break;
-            case 3:
-                throw new StandardError(12)
-                break;
-        }
-        await User.updateOne({ _id: userId }, { $set: { pendingVerification: { email, key } } }, { runValidators: true })
-        await sendEmail(email, 'Email Verification Key',
-            `To verify this email, go to ${hostUrl}/verify-email/${key}.`,
-            `<p>Hi, thanks for signing up!</p>
-<p>Click <a href="${hostUrl}/verify-email/${key}">here</a> to verify your email.</p>
-<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verify-email/${key}">${hostUrl}/verify-email/${key}</a></b></small></p>`
-        )
     }
+}
+
+// Begin email verification process by generating verification JWT and sending email
+const beginEmailVerification = async (userId: string, email: string, hostUrl: string) => {
+    let verificationToken = createJWT({ id: userId, email }, <string>process.env.JWT_KEY, 60) // TODO: Use a different key
+    await User.updateOne({ _id: userId }, { $set: { email, verified: false } }, { runValidators: true })
+    await sendEmail(email, 'Email Verification Key',
+        `To verify this email, go to ${hostUrl}/verify-email/${verificationToken}. This will expire shortly.`,
+        `<p>Hi, thanks for signing up!</p>
+<p>Click <a href="${hostUrl}/verify-email/${verificationToken}">here</a> to verify your email. The link will expire shortly.</p>
+<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verify-email/${verificationToken}">${hostUrl}/verify-email/${verificationToken}</a></b></small></p>`
+    )
 }
 
 // Signup
 const signup = async (email: string, password: string, hostUrl: string) => {
-    const prepResult = await emailVerification.prepare(email)
-    emailVerification.throwErrors(prepResult)
-    const user = await User.create({ email, password: await checkAndHashPassword(password) })
-    await emailVerification.beginVerification(user._id.toString(), email.trim(), prepResult, hostUrl)
+    await prepareForEmailVerification(email)
+    const user = await User.create({ email, verified: false, password: await checkAndHashPassword(password) })
+    await beginEmailVerification(user._id.toString(), email.trim(), hostUrl)
 }
 
 // Change email
 const changeEmail = async (userId: string, password: string, newEmail: string, hostUrl: string) => {
+    newEmail = newEmail.trim()
     const user = await User.findOne({ _id: userId })
     if (!user) throw new StandardError(5)
     const auth = await bcrypt.compare(password, user.password)
     if (!auth) throw new StandardError(7)
     if (user.email === newEmail.toLowerCase().trim()) throw new StandardError(13)
-    const prepResult = await emailVerification.prepare(newEmail, userId)
-    emailVerification.throwErrors(prepResult)
-    await emailVerification.beginVerification(userId, newEmail.trim(), prepResult, hostUrl)
+    await prepareForEmailVerification(newEmail, userId)
+    await beginEmailVerification(userId, newEmail, hostUrl)
 }
 
 // Complete the email verification process using the provided key
-const verifyEmail = async (verificationKey: string) => {
-    const user = await User.findOne({ "pendingVerification.key": verificationKey })
+const verifyEmail = async (verificationJWT: string) => {
+    let data: any = null
+    try {
+        data = await decodeToken(verificationJWT, <string>process.env.JWT_KEY) // TODO: Change to a different key
+    } catch (err) {
+        throw new StandardError(9)
+    }
+    if (!data.id || !data.email) throw new StandardError(9)
+    const user = await User.findOne({ _id: data.id })
     if (!user) throw new StandardError(9)
-    await User.updateOne({ _id: user._id }, { $set: { email: user.pendingVerification.email, pendingVerification: null } }, { runValidators: true })
-}
-
-// Create a JWT containing an ID
-const createToken = (id: string) => {
-    return jwt.sign({ id }, process.env.JWT_KEY || '', {
-        expiresIn: 5 * 60 // 15 minutes
-    })
+    await User.updateOne({ _id: user._id }, { $set: { email: data.email, verified: true } }, { runValidators: true })
 }
 
 // Checks that password satisfies requirements
@@ -155,7 +108,7 @@ const login = async (email: string, password: string, ip: string, userAgent: str
     if (!auth) throw new StandardError(2)
     if (user.pendingVerification) if (user.pendingVerification.email === email) throw new StandardError(11)
     const refreshToken = await assignNewRefreshToken(user._id, ip, userAgent)
-    return { token: createToken(user._id.toString()), refreshToken }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_KEY, 5), refreshToken }
 }
 
 // Get a new token using a refresh token
@@ -168,7 +121,7 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
         { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } },
         { runValidators: true }
     )
-    return { token: createToken(user._id.toString()) }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_KEY, 5) }
 }
 
 // Get list of 'devices' (refresh token info)

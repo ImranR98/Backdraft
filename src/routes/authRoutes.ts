@@ -12,7 +12,7 @@ router.post('/api/signup',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['email', 'password'])
-            await authController.signup(req.body.email, req.body.password, req.headers.host || '')
+            await authController.signup(req.body.email, req.body.password, <string>req.headers.host)
             res.status(201).send()
         } catch (err) {
             next(err)
@@ -23,8 +23,8 @@ router.post('/api/signup',
 router.post('/api/verify-email',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
-            validateStringArgs(req.body, ['verificationKey'])
-            await authController.verifyEmail(req.body.verificationKey)
+            validateStringArgs(req.body, ['verificationJWT'])
+            await authController.verifyEmail(req.body.verificationJWT)
             res.status(200).send()
         } catch (err) {
             next(err)
@@ -90,7 +90,7 @@ router.post('/api/change-email', requireAuth,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['password', 'newEmail'])
-            await authController.changeEmail(res.locals.user._id, req.body.password, req.body.newEmail, req.headers.host || '')
+            await authController.changeEmail(res.locals.user._id, req.body.password, req.body.newEmail, <string>req.headers.host)
             res.status(200).send()
         } catch (err) {
             next(err)

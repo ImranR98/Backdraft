@@ -9,20 +9,17 @@ import { app } from '../src/funcs/express'
 
 import User from '../src/models/User'
 
-// Main test user data
+import { createJWT } from '../src/funcs/validators'
+
+// Test user data
 const email = 'person@example.com'
 const password = 'zoom4321'
 const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/zBIZu'
-const verificationKey = '52cd0c01f33dc63bd712de9a81887d0896dbaea6d417299259223f85841b657d67f82ef5e31be513b5d9939a70fb9dc3ec41cc726e1c52e28d013ed45dda2478'
 
-// Secondary test user data
-const email2 = 'person2@example.com'
-const verificationKey2 = verificationKey.replace('a', 'b')
-
-const createTestUser = async (verified: boolean = true, secondary: boolean = false) => {
-    let pendingVerification = null
-    if (!verified) pendingVerification = { email: secondary ? email2 : email, key: secondary ? verificationKey2 : verificationKey }
-    await User.create({ email: secondary ? email2 : email, password: hashedPassword, pendingVerification })
+const createTestUser = async (email: string, verified: boolean = true) => {
+    const user = await User.create({ email, verified, password: hashedPassword })
+    const verificationJWT = createJWT({ id: user._id, email: user.email }, <string>process.env.JWT_KEY, 60) // TODO: Change this when changed elsewhere
+    return { user, verificationJWT }
 }
 
 describe('Authentication related API tests', function () {
@@ -53,9 +50,13 @@ describe('Authentication related API tests', function () {
     })
 
     describe('When the DB contains an unverified user', function () {
+        let verificationJWT: string | null = null
 
         beforeEach('Create test user', function (done) {
-            createTestUser(false).then(() => done()).catch(err => done(err))
+            createTestUser(email, false).then((data) => {
+                verificationJWT = data.verificationJWT
+                done()
+            }).catch(err => done(err))
         })
 
         describe('Sign up', function () {
@@ -70,13 +71,13 @@ describe('Authentication related API tests', function () {
 
         describe('Verify email for the existing unverified user', function () {
             it('With a valid key', function (done) {
-                request(app).post('/api/verify-email').send({ verificationKey }).then((res) => {
+                request(app).post('/api/verify-email').send({ verificationJWT }).then((res) => {
                     expect(res.status).to.equal(200)
                     done()
                 }).catch((err) => done(err))
             })
             it('With an invalid key', function (done) {
-                request(app).post('/api/verify-email').send({ verificationKey: verificationKey2 }).then((res) => {
+                request(app).post('/api/verify-email').send({ verificationJWT: verificationJWT + 'x' }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_VERIFICATION_KEY' })
                     done()
@@ -88,7 +89,7 @@ describe('Authentication related API tests', function () {
     describe('When the DB contains a verified user', function () {
 
         beforeEach('Create test user', function (done) {
-            createTestUser().then(() => done()).catch(err => done(err))
+            createTestUser(email).then(() => done()).catch(err => done(err))
         })
 
         describe('Sign up', function () {
@@ -241,7 +242,7 @@ describe('Authentication related API tests', function () {
             describe('Change email', function () {
                 this.timeout('50000')
                 it('With a valid current password and email', function (done) {
-                    request(app).post('/api/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: email2 }).then((res) => {
+                    request(app).post('/api/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: 'x' + email }).then((res) => {
                         expect(res.status).to.equal(200)
                         done()
                     }).catch((err) => done(err))
@@ -254,7 +255,7 @@ describe('Authentication related API tests', function () {
                     }).catch((err) => done(err))
                 })
                 it('With an invalid current password and a valid email', function (done) {
-                    request(app).post('/api/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password: password + 'x', newEmail: email2 }).then((res) => {
+                    request(app).post('/api/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password: password + 'x', newEmail: 'x' + email }).then((res) => {
                         expect(res.status).to.equal(401)
                         expect(res.body).to.contain({ code: 'WRONG_PASSWORD' })
                         done()
@@ -271,12 +272,12 @@ describe('Authentication related API tests', function () {
 
             describe('When the DB contains a verified user for whom valid JWT and refresh tokens are available, and a second unverified user', function () {
                 beforeEach('Create second test user', function (done) {
-                    createTestUser(false, true).then(() => done()).catch(err => done(err))
+                    createTestUser('x' + email, false).then(() => done()).catch(err => done(err))
                 })
 
                 this.timeout('50000')
                 it('With the same email as the existing unverified user', function (done) {
-                    request(app).post('/api/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: email2 }).then((res) => {
+                    request(app).post('/api/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: 'x' + email }).then((res) => {
                         expect(res.status).to.equal(200)
                         done()
                     }).catch((err) => done(err))
@@ -285,13 +286,14 @@ describe('Authentication related API tests', function () {
 
             describe('When the DB contains a verified user for whom valid JWT and refresh tokens are available, and a second verified user', function () {
                 beforeEach('Create second test user', function (done) {
-                    createTestUser(true, true).then(() => done()).catch(err => done(err))
+                    createTestUser('x' + email, true).then(() => done()).catch(err => done(err))
                 })
 
                 this.timeout('50000')
                 it('With the same email as the existing verified user', function (done) {
-                    request(app).post('/api/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: email2 }).then((res) => {
+                    request(app).post('/api/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: 'x' + email }).then((res) => {
                         expect(res.status).to.equal(400)
+                        expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
                         done()
                     }).catch((err) => done(err))
                 })
