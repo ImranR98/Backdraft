@@ -52,7 +52,7 @@ const assignNewRefreshToken = async (userId: string, ip: string, userAgent: stri
 // Generates an EmailToken (or appropriates an existing one)
 const startEmailVerification = async (userId: string, newEmail: string, hostUrl: string) => {
     const existingEmailUser = await User.findOne({ email: newEmail })
-    if (existingEmailUser) throw new StandardError(12)
+    if (existingEmailUser) if (existingEmailUser._id.toString() !== userId) throw new StandardError(12)
     const existingEmailToken = await EmailToken.findOne({ email: newEmail })
     let verificationKey = null
     if (!existingEmailToken) {
@@ -60,7 +60,7 @@ const startEmailVerification = async (userId: string, newEmail: string, hostUrl:
         verificationKey = crypto.randomBytes(64).toString('hex')
         await EmailToken.create({ email: newEmail, user: userId, verificationKey })
     } else {
-        if (existingEmailToken.user !== userId) { // If someone else tried verifying this but didn't, too bad for them, the token is re-assigned
+        if (existingEmailToken.user.toString() !== userId) { // If someone else tried verifying this but didn't, too bad for them, the token is re-assigned
             await EmailToken.deleteMany({ user: userId })
             await EmailToken.updateOne({ _id: existingEmailToken._id }, { $set: { user: userId } }, { runValidators: true })
         }
@@ -78,17 +78,17 @@ const startEmailVerification = async (userId: string, newEmail: string, hostUrl:
 const verifyEmail = async (verificationKey: string) => {
     const emailToken = await EmailToken.findOne({ verificationKey })
     if (!emailToken) throw new StandardError(9)
-    await User.updateOne({ _id: emailToken.user }, { $set: { email: emailToken.email } }, { runValidators: true })
+    await User.updateOne({ _id: emailToken.user }, { $set: { email: emailToken.email, verified: true } }, { runValidators: true })
 }
 
 // Signup
 const signup = async (email: string, password: string, hostUrl: string) => {
-    const user = await User.create({ email: null, password: await checkAndHashPassword(password) })
-    await startEmailVerification(user._id, email, hostUrl)
+    const user = await User.create({ email, verified: false, password: await checkAndHashPassword(password) })
+    await startEmailVerification(user._id.toString(), email, hostUrl)
 }
 
 // Change email
-const changeEmail = async (userId: string, password: string, newEmail: string, hostUrl: string) => { // TODO: Changed email must also be verified
+const changeEmail = async (userId: string, password: string, newEmail: string, hostUrl: string) => {
     const user = await User.findOne({ _id: userId })
     if (!user) throw new StandardError(5)
     const auth = await bcrypt.compare(password, user.password)
@@ -104,7 +104,7 @@ const login = async (email: string, password: string, ip: string, userAgent: str
     if (!auth) throw new StandardError(2)
     if (!user.email) throw new StandardError(11)
     const refreshToken = await assignNewRefreshToken(user._id, ip, userAgent)
-    return { token: createToken(user._id), refreshToken }
+    return { token: createToken(user._id.toString()), refreshToken }
 }
 
 // Get a new token using a refresh token
@@ -117,7 +117,7 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
         { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } },
         { runValidators: true }
     )
-    return { token: createToken(user._id) }
+    return { token: createToken(user._id.toString()) }
 }
 
 // Get list of 'devices' (refresh token info)

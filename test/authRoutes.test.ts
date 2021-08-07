@@ -15,14 +15,15 @@ const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/z
 const verificationKey = '52cd0c01f33dc63bd712de9a81887d0896dbaea6d417299259223f85841b657d67f82ef5e31be513b5d9939a70fb9dc3ec41cc726e1c52e28d013ed45dda2478'
 
 const createTestUser = async (verified: boolean = true) => {
-    const user = await User.create({ email: verified ? email : null, password: hashedPassword })
+    const user = await User.create({ email, verified, password: hashedPassword })
     if (!verified)
         await EmailToken.create({ user: user._id, email, verificationKey })
 }
-// TODO: 'Verify email' test for an already verified user with a new email
+
 describe('Authentication related API tests', function () {
     describe('Tests that require an empty DB', function () {
         describe('Sign up', function () {
+            this.timeout('50000') // Nodemailer createTransport and sendEmail may take a while
             it('With valid credentials', function (done) {
                 request(app).post('/signup').send({ email, password }).then((res) => {
                     expect(res.status).to.equal(201)
@@ -101,9 +102,6 @@ describe('Authentication related API tests', function () {
         describe('Tests that also require a valid token and refresh token for the existing verified user', function () {
             let credentials: { token: string, refreshToken: string } = { token: '', refreshToken: '' }
 
-            beforeEach('Create test user', function (done) {
-                createTestUser().then(() => done()).catch(err => done(err))
-            })
             beforeEach('Login', function (done) {
                 request(app).post('/login').send({ email, password }).then((res) => {
                     expect(res.status).to.equal(200)
@@ -147,7 +145,6 @@ describe('Authentication related API tests', function () {
 
             describe('Revoke login', function () {
                 let tokenId: string = ''
-                this.timeout('50000')
                 beforeEach('Get logins', function (done) {
                     request(app).get('/logins').set('Authorization', `Bearer ${credentials.token}`).then((res) => {
                         expect(res.status).to.equal(200)
@@ -214,6 +211,7 @@ describe('Authentication related API tests', function () {
             })
 
             describe('Change email', function () {
+                this.timeout('50000') // Nodemailer createTransport and sendEmail may take a while
                 it('With a valid current password and email', function (done) {
                     request(app).post('/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: 'x' + email }).then((res) => {
                         expect(res.status).to.equal(200)
@@ -234,6 +232,7 @@ describe('Authentication related API tests', function () {
                         done()
                     }).catch((err) => done(err))
                 })
+                // TODO: Add one where new email is same as old (controller method needs this check added)
             })
 
         })

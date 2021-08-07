@@ -18,7 +18,8 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email not provided'],
-    index: { unique: true, sparse: true },
+    verified: Boolean,
+    unique: true,
     lowercase: true,
     validate: [validator.isEmail, 'Email is invalid']
   },
