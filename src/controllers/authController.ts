@@ -8,46 +8,6 @@ import crypto from 'crypto'
 import { StandardError } from '../funcs/errors'
 import { sendEmail } from '../funcs/emailer'
 
-// Duration of JWT
-const maxAge = 5 * 60 // 15 minutes
-
-// Create JWT
-const createToken = (id: string) => {
-    return jwt.sign({ id }, process.env.JWT_KEY || '', {
-        expiresIn: maxAge
-    })
-}
-
-// Checks that password satisfies requirements
-const isPasswordValid = (password: string) => password.length >= 6
-
-// Ensure the given password is valid then hash it
-const checkAndHashPassword = async (password: string) => {
-    if (!isPasswordValid(password)) throw new StandardError(8)
-    const salt = await bcrypt.genSalt();
-    return await bcrypt.hash(password, salt)
-}
-
-// Assuming the user of provided ID exists, save + return a new refresh token for them and run a cleanup policy on their existing refresh tokens
-const assignNewRefreshToken = async (userId: string, ip: string, userAgent: string) => {
-    const refreshToken = crypto.randomBytes(64).toString('hex')
-    // Run cleanup
-    await User.updateOne({ _id: userId }, {
-        $push: { refreshTokens: { refreshToken, ip, userAgent, date: new Date() } }
-    }, { runValidators: true })
-    // Get rid of any refresh token that hasn't been used in 30 days and is from the same IP and user-agent combo
-    let lastMonth = new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * 30.44)
-    await User.updateOne({ _id: userId }, {
-        $pull: { refreshTokens: { ip, userAgent, date: { $lt: lastMonth } } },
-    }, { runValidators: true })
-    // Get rid of any refresh tokens that haven't been used in a year, regardless of IP or user-agent combo
-    let lastYear = new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * 365.2425)
-    await User.updateOne({ _id: userId }, {
-        $pull: { refreshTokens: { date: { $lt: lastYear } } },
-    }, { runValidators: true })
-    return refreshToken
-}
-
 // Contains 3 functions related to email verification; these can't be merged into 1 as they are used differently in signup vs change-email
 const emailVerification = {
     // Clear the way for an email to be verified by a user (or no user) if possible and return result code
@@ -78,7 +38,7 @@ const emailVerification = {
                     if (userId === existingPendingVerificationUsers[i]._id.toString())
                         return 1 // Resend existing verification
                     else
-                        await User.updateOne({ _id: existingPendingVerificationUsers[i]._id }, { $set: { pendingVerification: null } })
+                        await User.updateOne({ _id: existingPendingVerificationUsers[i]._id }, { $set: { pendingVerification: null } }, { runValidators: true })
                 }
             }
         }
@@ -112,7 +72,7 @@ const emailVerification = {
                 throw new StandardError(12)
                 break;
         }
-        await User.updateOne({ _id: userId }, { $set: { pendingVerification: { email, key } } })
+        await User.updateOne({ _id: userId }, { $set: { pendingVerification: { email, key } } }, { runValidators: true })
         await sendEmail(email, 'Email Verification Key',
             `To verify this email, go to ${hostUrl}/verify-email/${key}.`,
             `<p>Hi, thanks for signing up!</p>
@@ -120,13 +80,6 @@ const emailVerification = {
 <p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verify-email/${key}">${hostUrl}/verify-email/${key}</a></b></small></p>`
         )
     }
-}
-
-// Validate an EmailToken and update the user's email
-const verifyEmail = async (verificationKey: string) => {
-    const user = await User.findOne({ "pendingVerification.key": verificationKey })
-    if (!user) throw new StandardError(9)
-    await User.updateOne({ _id: user._id }, { $set: { email: user.pendingVerification.email, pendingVerification: null } }, { runValidators: true })
 }
 
 // Signup
@@ -146,6 +99,50 @@ const changeEmail = async (userId: string, password: string, newEmail: string, h
     const prepResult = await emailVerification.prepare(newEmail, userId)
     emailVerification.throwErrors(prepResult)
     await emailVerification.beginVerification(userId, newEmail, prepResult, hostUrl)
+}
+
+// Complete the email verification process using the provided key
+const verifyEmail = async (verificationKey: string) => {
+    const user = await User.findOne({ "pendingVerification.key": verificationKey })
+    if (!user) throw new StandardError(9)
+    await User.updateOne({ _id: user._id }, { $set: { email: user.pendingVerification.email, pendingVerification: null } }, { runValidators: true })
+}
+
+// Create a JWT containing an ID
+const createToken = (id: string) => {
+    return jwt.sign({ id }, process.env.JWT_KEY || '', {
+        expiresIn: 5 * 60 // 15 minutes
+    })
+}
+
+// Checks that password satisfies requirements
+const isPasswordValid = (password: string) => password.length >= 6
+
+// Ensure the given password is valid then hash it
+const checkAndHashPassword = async (password: string) => {
+    if (!isPasswordValid(password)) throw new StandardError(8)
+    const salt = await bcrypt.genSalt();
+    return await bcrypt.hash(password, salt)
+}
+
+// Assuming the user of provided ID exists, save + return a new refresh token for them and run a cleanup policy on their existing refresh tokens
+const assignNewRefreshToken = async (userId: string, ip: string, userAgent: string) => {
+    const refreshToken = crypto.randomBytes(64).toString('hex')
+    // Run cleanup
+    await User.updateOne({ _id: userId }, {
+        $push: { refreshTokens: { refreshToken, ip, userAgent, date: new Date() } }
+    }, { runValidators: true })
+    // Get rid of any refresh token that hasn't been used in 30 days and is from the same IP and user-agent combo
+    let lastMonth = new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * 30.44)
+    await User.updateOne({ _id: userId }, {
+        $pull: { refreshTokens: { ip, userAgent, date: { $lt: lastMonth } } },
+    }, { runValidators: true })
+    // Get rid of any refresh tokens that haven't been used in a year, regardless of IP or user-agent combo
+    let lastYear = new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * 365.2425)
+    await User.updateOne({ _id: userId }, {
+        $pull: { refreshTokens: { date: { $lt: lastYear } } },
+    }, { runValidators: true })
+    return refreshToken
 }
 
 // Login

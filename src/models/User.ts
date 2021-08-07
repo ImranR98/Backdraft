@@ -5,19 +5,23 @@ import mongoose from 'mongoose'
 import validator from 'validator'
 
 // Define refresh token sub-schema
-// No use setting required validators as these are ignored when the sub-schema is in an array, as it is below
 const refreshTokenSchema = new mongoose.Schema({
-  refreshToken: String,
-  ip: String,
+  refreshToken: { type: String, required: true },
+  ip: { type: String, required: true },
   userAgent: String,
-  date: Date
+  date: Date, // For some reason setting this to required causes an error - TODO
 })
 
 // Define pending verification sub-schema
 // If not null, user has a pending email change yet to be verified
 // If email in this sub-schema is the same as the main user email, then the user is a new signup and even their current email has never been verified
 const pendingVerificationSchema = new mongoose.Schema({
-  email: String,
+  email: {
+    type: String,
+    required: [true, 'Email not provided'],
+    lowercase: true,
+    validate: [validator.isEmail, 'Email is invalid']
+  },
   key: String
 })
 

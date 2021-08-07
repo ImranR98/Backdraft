@@ -20,12 +20,12 @@ const verificationKey2 = verificationKey.replace('a', 'b')
 
 const createTestUser = async (verified: boolean = true, secondary: boolean = false) => {
     let pendingVerification = null
-    if (!verified) pendingVerification = { email, verificationKey: secondary ? verificationKey2 : verificationKey }
+    if (!verified) pendingVerification = { email, key: secondary ? verificationKey2 : verificationKey }
     const user = await User.create({ email: secondary ? email2 : email, password: hashedPassword, pendingVerification })
 }
 
 describe('Authentication related API tests', function () {
-    describe('Tests that require an empty DB', function () {
+    describe('When the DB is empty', function () {
         describe('Sign up', function () {
             this.timeout('50000')
             it('With valid credentials', function (done) {
@@ -51,7 +51,7 @@ describe('Authentication related API tests', function () {
         })
     })
 
-    describe('Tests that require an existing unverified user and an email verification token', function () {
+    describe('When the DB contains an unverified user', function () {
 
         beforeEach('Create test user', function (done) {
             createTestUser(false).then(() => done()).catch(err => done(err))
@@ -59,16 +59,15 @@ describe('Authentication related API tests', function () {
 
         describe('Sign up', function () {
             this.timeout('50000')
-            it('With an existing email', function (done) {
+            it('With the same email as the existing unverified user', function (done) {
                 request(app).post('/signup').send({ email, password }).then((res) => {
-                    expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
+                    expect(res.status).to.equal(201)
                     done()
                 }).catch((err) => done(err))
             })
         })
 
-        describe('Verify email for unverified user', function () {
+        describe('Verify email for the existing unverified user', function () {
             it('With a valid key', function (done) {
                 request(app).post('/verify-email').send({ verificationKey }).then((res) => {
                     expect(res.status).to.equal(200)
@@ -85,7 +84,7 @@ describe('Authentication related API tests', function () {
         })
     })
 
-    describe('Tests that require an existing verified user', function () {
+    describe('When the DB contains a verified user', function () {
 
         beforeEach('Create test user', function (done) {
             createTestUser().then(() => done()).catch(err => done(err))
@@ -127,7 +126,7 @@ describe('Authentication related API tests', function () {
             })
         })
 
-        describe('Tests that also require a valid token and refresh token for the existing verified user', function () {
+        describe('When the DB contains a verified user for whom valid JWT and refresh tokens are available', function () {
             let credentials: { token: string, refreshToken: string } = { token: '', refreshToken: '' }
 
             beforeEach('Login', function (done) {
