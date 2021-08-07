@@ -8,7 +8,7 @@ import { validateStringArgs } from '../funcs/validators'
 
 const router = Router()
 
-router.post('/signup',
+router.post('/api/signup',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['email', 'password'])
@@ -20,7 +20,7 @@ router.post('/signup',
     }
 )
 
-router.post('/verify-email',
+router.post('/api/verify-email',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['verificationKey'])
@@ -32,7 +32,7 @@ router.post('/verify-email',
     }
 )
 
-router.post('/login',
+router.post('/api/login',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['email', 'password'])
@@ -43,7 +43,7 @@ router.post('/login',
     }
 )
 
-router.post('/token',
+router.post('/api/token',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['refreshToken'])
@@ -54,7 +54,7 @@ router.post('/token',
     }
 )
 
-router.get('/logins', requireAuth,
+router.get('/api/logins', requireAuth,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             res.status(200).send(await authController.logins(res.locals.user._id))
@@ -64,7 +64,7 @@ router.get('/logins', requireAuth,
     }
 )
 
-router.post('/revoke-login', requireAuth,
+router.post('/api/revoke-login', requireAuth,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['tokenId'])
@@ -75,7 +75,7 @@ router.post('/revoke-login', requireAuth,
     }
 )
 
-router.post('/change-password', requireAuth,
+router.post('/api/change-password', requireAuth,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['password', 'newPassword'])
@@ -86,7 +86,7 @@ router.post('/change-password', requireAuth,
     }
 )
 
-router.post('/change-email', requireAuth,
+router.post('/api/change-email', requireAuth,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
             validateStringArgs(req.body, ['password', 'newEmail'])

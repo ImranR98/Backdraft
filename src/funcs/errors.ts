@@ -73,6 +73,11 @@ class StandardError {
                 this.errorCode = 'EMAIL_IN_USE'
                 this.message = 'That email is already in use'
                 break;
+            case 13:
+                this.httpCode = 400
+                this.errorCode = 'IS_CURRENT_EMAIL'
+                this.message = 'That is your current email'
+                break;
             default:
                 this.httpCode = 400
                 this.errorCode = 'GENERAL_ERROR'

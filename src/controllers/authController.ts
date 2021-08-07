@@ -87,7 +87,7 @@ const signup = async (email: string, password: string, hostUrl: string) => {
     const prepResult = await emailVerification.prepare(email)
     emailVerification.throwErrors(prepResult)
     const user = await User.create({ email, password: await checkAndHashPassword(password) })
-    await emailVerification.beginVerification(user._id.toString(), email, prepResult, hostUrl)
+    await emailVerification.beginVerification(user._id.toString(), email.trim(), prepResult, hostUrl)
 }
 
 // Change email
@@ -96,9 +96,10 @@ const changeEmail = async (userId: string, password: string, newEmail: string, h
     if (!user) throw new StandardError(5)
     const auth = await bcrypt.compare(password, user.password)
     if (!auth) throw new StandardError(7)
+    if (user.email === newEmail.toLowerCase().trim()) throw new StandardError(13)
     const prepResult = await emailVerification.prepare(newEmail, userId)
     emailVerification.throwErrors(prepResult)
-    await emailVerification.beginVerification(userId, newEmail, prepResult, hostUrl)
+    await emailVerification.beginVerification(userId, newEmail.trim(), prepResult, hostUrl)
 }
 
 // Complete the email verification process using the provided key
@@ -147,6 +148,7 @@ const assignNewRefreshToken = async (userId: string, ip: string, userAgent: stri
 
 // Login
 const login = async (email: string, password: string, ip: string, userAgent: string) => {
+    email = email.trim()
     const user = await User.findOne({ email })
     if (!user) throw new StandardError(2)
     const auth = await bcrypt.compare(password, user.password)
