@@ -13,12 +13,20 @@ const refreshTokenSchema = new mongoose.Schema({
   date: Date
 })
 
+// Define pending verification sub-schema
+// If not null, user has a pending email change yet to be verified
+// If email in this sub-schema is the same as the main user email, then the user is a new signup and even their current email has never been verified
+const pendingVerificationSchema = new mongoose.Schema({
+  email: String,
+  key: String
+})
+
+
 // Define user schema
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email not provided'],
-    verified: Boolean,
     unique: true,
     lowercase: true,
     validate: [validator.isEmail, 'Email is invalid']
@@ -27,7 +35,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password not provided'],
   },
-  refreshTokens: [refreshTokenSchema]
+  refreshTokens: [refreshTokenSchema],
+  pendingVerification: pendingVerificationSchema
 })
 
 // Define and export the model

@@ -2,7 +2,6 @@
 // Provides all major functions related to authentication (also tangentially related ones like the 'logins' function)
 
 import User from '../models/User'
-import EmailToken from '../models/EmailToken'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
@@ -49,42 +48,93 @@ const assignNewRefreshToken = async (userId: string, ip: string, userAgent: stri
     return refreshToken
 }
 
-// Generates an EmailToken (or appropriates an existing one)
-const startEmailVerification = async (userId: string, newEmail: string, hostUrl: string) => {
-    const existingEmailUser = await User.findOne({ email: newEmail })
-    if (existingEmailUser) if (existingEmailUser._id.toString() !== userId) throw new StandardError(12)
-    const existingEmailToken = await EmailToken.findOne({ email: newEmail })
-    let verificationKey = null
-    if (!existingEmailToken) {
-        await EmailToken.deleteMany({ user: userId }) // If this user had another unverified email, they clearly don't want it anymore
-        verificationKey = crypto.randomBytes(64).toString('hex')
-        await EmailToken.create({ email: newEmail, user: userId, verificationKey })
-    } else {
-        if (existingEmailToken.user.toString() !== userId) { // If someone else tried verifying this but didn't, too bad for them, the token is re-assigned
-            await EmailToken.deleteMany({ user: userId })
-            await EmailToken.updateOne({ _id: existingEmailToken._id }, { $set: { user: userId } }, { runValidators: true })
+// Contains 3 functions related to email verification; these can't be merged into 1 as they are used differently in signup vs change-email
+const emailVerification = {
+    // Clear the way for an email to be verified by a user (or no user) if possible and return result code
+    prepare: async (email: string, userId: string | null = null) => {
+        const existingEmailUser = await User.findOne({ email })
+
+        if (existingEmailUser) {
+            if (userId === existingEmailUser._id.toString()) {
+                if (!existingEmailUser.pendingVerification)
+                    return 2 // Already verified
+                else if (existingEmailUser.pendingVerification.email === email)
+                    return 1 // Resend existing verification
+            } else {
+                if (!existingEmailUser.pendingVerification)
+                    return 3 // Email in use
+                else if (existingEmailUser.pendingVerification.email === email)
+                    await User.deleteOne({ _id: existingEmailUser._id })
+                else
+                    return 3 // Email in use
+            }
         }
-        verificationKey = existingEmailToken.verificationKey
+
+        const existingPendingVerificationUsers = await User.find({ "pendingVerification.email": email })
+
+        if (existingPendingVerificationUsers.length > 0) {
+            for (let i = 0; i < existingPendingVerificationUsers.length; i++) {
+                if (existingPendingVerificationUsers[i].pendingVerification.email !== existingPendingVerificationUsers[i].email) {
+                    if (userId === existingPendingVerificationUsers[i]._id.toString())
+                        return 1 // Resend existing verification
+                    else
+                        await User.updateOne({ _id: existingPendingVerificationUsers[i]._id }, { $set: { pendingVerification: null } })
+                }
+            }
+        }
+
+        return 0 // Safe to verify
+    },
+    throwErrors: (preparationResult: number) => {
+        switch (preparationResult) {
+            case 2:
+                throw new StandardError(10)
+                break;
+            case 3:
+                throw new StandardError(12)
+                break;
+        }
+    },
+    // Interpret result code from prepare function and create email verification accordingly
+    beginVerification: async (userId: string, email: string, preparationResult: number, hostUrl: string) => {
+        let key = null
+        switch (preparationResult) {
+            case 0:
+                key = crypto.randomBytes(64).toString('hex')
+                break;
+            case 1:
+                key = await User.findOne({ _id: userId }).pendingVerification.key
+                break;
+            case 2:
+                throw new StandardError(10)
+                break;
+            case 3:
+                throw new StandardError(12)
+                break;
+        }
+        await User.updateOne({ _id: userId }, { $set: { pendingVerification: { email, key } } })
+        await sendEmail(email, 'Email Verification Key',
+            `To verify this email, go to ${hostUrl}/verify-email/${key}.`,
+            `<p>Hi, thanks for signing up!</p>
+<p>Click <a href="${hostUrl}/verify-email/${key}">here</a> to verify your email.</p>
+<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verify-email/${key}">${hostUrl}/verify-email/${key}</a></b></small></p>`
+        )
     }
-    await sendEmail(newEmail, 'Email Verification Key',
-        `To verify this email, go to ${hostUrl}/verify-email/${verificationKey}.`,
-        `<p>Hi, thanks for signing up!</p>
-<p>Click <a href="${hostUrl}/verify-email/${verificationKey}">here</a> to verify your email.</p>
-<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verify-email/${verificationKey}">${hostUrl}/verify-email/${verificationKey}</a></b></small></p>`
-    )
 }
 
 // Validate an EmailToken and update the user's email
 const verifyEmail = async (verificationKey: string) => {
-    const emailToken = await EmailToken.findOne({ verificationKey })
-    if (!emailToken) throw new StandardError(9)
-    await User.updateOne({ _id: emailToken.user }, { $set: { email: emailToken.email, verified: true } }, { runValidators: true })
+    const user = await User.findOne({ "pendingVerification.key": verificationKey })
+    if (!user) throw new StandardError(9)
+    await User.updateOne({ _id: user._id }, { $set: { email: user.pendingVerification.email, pendingVerification: null } }, { runValidators: true })
 }
 
 // Signup
 const signup = async (email: string, password: string, hostUrl: string) => {
-    const user = await User.create({ email, verified: false, password: await checkAndHashPassword(password) })
-    await startEmailVerification(user._id.toString(), email, hostUrl)
+    const prepResult = await emailVerification.prepare(email)
+    emailVerification.throwErrors(prepResult)
+    const user = await User.create({ email, password: await checkAndHashPassword(password) })
+    await emailVerification.beginVerification(user._id.toString(), email, prepResult, hostUrl)
 }
 
 // Change email
@@ -93,7 +143,9 @@ const changeEmail = async (userId: string, password: string, newEmail: string, h
     if (!user) throw new StandardError(5)
     const auth = await bcrypt.compare(password, user.password)
     if (!auth) throw new StandardError(7)
-    await startEmailVerification(userId, newEmail, hostUrl)
+    const prepResult = await emailVerification.prepare(newEmail, userId)
+    emailVerification.throwErrors(prepResult)
+    await emailVerification.beginVerification(userId, newEmail, prepResult, hostUrl)
 }
 
 // Login
@@ -102,7 +154,7 @@ const login = async (email: string, password: string, ip: string, userAgent: str
     if (!user) throw new StandardError(2)
     const auth = await bcrypt.compare(password, user.password)
     if (!auth) throw new StandardError(2)
-    if (!user.email) throw new StandardError(11)
+    if (user.pendingVerification) if (user.pendingVerification.email === email) throw new StandardError(11)
     const refreshToken = await assignNewRefreshToken(user._id, ip, userAgent)
     return { token: createToken(user._id.toString()), refreshToken }
 }

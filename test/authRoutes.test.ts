@@ -6,24 +6,28 @@ import { expect } from 'chai'
 import request from 'supertest'
 
 import { app } from '../src/funcs/express'
-import EmailToken from '../src/models/EmailToken'
 import User from '../src/models/User'
 
+// Main test user data
 const email = 'person@example.com'
 const password = 'zoom4321'
 const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/zBIZu'
 const verificationKey = '52cd0c01f33dc63bd712de9a81887d0896dbaea6d417299259223f85841b657d67f82ef5e31be513b5d9939a70fb9dc3ec41cc726e1c52e28d013ed45dda2478'
 
-const createTestUser = async (verified: boolean = true) => {
-    const user = await User.create({ email, verified, password: hashedPassword })
-    if (!verified)
-        await EmailToken.create({ user: user._id, email, verificationKey })
+// Secondary test user data
+const email2 = 'person2@example.com'
+const verificationKey2 = verificationKey.replace('a', 'b')
+
+const createTestUser = async (verified: boolean = true, secondary: boolean = false) => {
+    let pendingVerification = null
+    if (!verified) pendingVerification = { email, verificationKey: secondary ? verificationKey2 : verificationKey }
+    const user = await User.create({ email: secondary ? email2 : email, password: hashedPassword, pendingVerification })
 }
 
 describe('Authentication related API tests', function () {
     describe('Tests that require an empty DB', function () {
         describe('Sign up', function () {
-            this.timeout('50000') // Nodemailer createTransport and sendEmail may take a while
+            this.timeout('50000')
             it('With valid credentials', function (done) {
                 request(app).post('/signup').send({ email, password }).then((res) => {
                     expect(res.status).to.equal(201)
@@ -47,10 +51,23 @@ describe('Authentication related API tests', function () {
         })
     })
 
-    describe('Tests that require an existing uverified user and an email verification token', function () {
+    describe('Tests that require an existing unverified user and an email verification token', function () {
+
         beforeEach('Create test user', function (done) {
             createTestUser(false).then(() => done()).catch(err => done(err))
         })
+
+        describe('Sign up', function () {
+            this.timeout('50000')
+            it('With an existing email', function (done) {
+                request(app).post('/signup').send({ email, password }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
+                    done()
+                }).catch((err) => done(err))
+            })
+        })
+
         describe('Verify email for unverified user', function () {
             it('With a valid key', function (done) {
                 request(app).post('/verify-email').send({ verificationKey }).then((res) => {
@@ -72,6 +89,17 @@ describe('Authentication related API tests', function () {
 
         beforeEach('Create test user', function (done) {
             createTestUser().then(() => done()).catch(err => done(err))
+        })
+
+        describe('Sign up', function () {
+            this.timeout('50000')
+            it('With an existing email', function (done) {
+                request(app).post('/signup').send({ email, password }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
+                    done()
+                }).catch((err) => done(err))
+            })
         })
 
         describe('Login', function () {
@@ -211,7 +239,7 @@ describe('Authentication related API tests', function () {
             })
 
             describe('Change email', function () {
-                this.timeout('50000') // Nodemailer createTransport and sendEmail may take a while
+                this.timeout('50000')
                 it('With a valid current password and email', function (done) {
                     request(app).post('/change-email').set('Authorization', `Bearer ${credentials.token}`).send({ password, newEmail: 'x' + email }).then((res) => {
                         expect(res.status).to.equal(200)
