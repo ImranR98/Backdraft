@@ -20,7 +20,7 @@ This project helps avoid such issues by providing a solid foundation that includ
 - Automated testing for all API endpoints using Mocha, Chai, SuperTest, and mongodb-memory-server.
 - Standardized logging using Winston and Morgan.
 - Mongoose and TypeScript used for easier database querying and increased type safety.
-- User email verification and "forgot password" functionality enabled by Nodemailer.
+- User email verification and enabled by Nodemailer.
 
 
 
@@ -93,8 +93,10 @@ In principle, each test should be fully independent and isolated from others. Th
 
 
 # TODO
-- Forgot Password
-- Automated tests for refresh token removal policies
+- Abstract away direct DB manipulation (via Mongoose) into their own layer instead of in the controllers
+    - In the same vein, see if the files in general can be organized in a simpler way ('funcs' is a bit vague, for instance)
+- Forgot password (probably using a JWT too, with existing password hash as signing key)
+- Automated tests for refresh token removal policies (and just more organized tests in general)
 
 
 
