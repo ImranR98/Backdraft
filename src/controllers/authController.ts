@@ -2,19 +2,71 @@
 // Provides all major functions related to authentication (also tangentially related ones like the 'logins' function)
 
 import User from '../models/User'
-import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import { StandardError } from '../errors'
+import { StandardError } from '../funcs/errors'
+import { sendEmail } from '../funcs/emailer'
+import { createJWT, decodeToken } from '../funcs/validators'
 
-// Duration of JWT
-const maxAge = 5 * 60 // 15 minutes
+// Clear the way for an email to be assigned to a user if possible
+const prepareForEmailVerification = async (email: string, userId: string | null = null) => {
+    const existingEmailUser = await User.findOne({ email })
+    if (existingEmailUser) {
+        if (userId === existingEmailUser._id.toString()) {
+            if (existingEmailUser.verified)
+                throw new StandardError(10)
+        } else {
+            if (existingEmailUser.verified)
+                throw new StandardError(12)
+            else
+                await User.deleteOne({ _id: existingEmailUser._id })
+        }
+    }
+}
 
-// Create JWT
-const createToken = (id: string) => {
-    return jwt.sign({ id }, process.env.JWT_KEY || '', {
-        expiresIn: maxAge
-    })
+// Begin email verification process by generating verification JWT and sending email
+const beginEmailVerification = async (userId: string, email: string, hostUrl: string) => {
+    let verificationToken = createJWT({ id: userId, email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, 60)
+    await User.updateOne({ _id: userId }, { $set: { email, verified: false } }, { runValidators: true })
+    await sendEmail(email, 'Email Verification Key',
+        `To verify this email, go to ${hostUrl}/verify-email/${verificationToken}. This will expire shortly.`,
+        `<p>Hi, thanks for signing up!</p>
+<p>Click <a href="${hostUrl}/verify-email/${verificationToken}">here</a> to verify your email. The link will expire shortly.</p>
+<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verify-email/${verificationToken}">${hostUrl}/verify-email/${verificationToken}</a></b></small></p>`
+    )
+}
+
+// Signup
+const signup = async (email: string, password: string, hostUrl: string) => {
+    await prepareForEmailVerification(email)
+    const user = await User.create({ email, verified: false, password: await checkAndHashPassword(password) })
+    await beginEmailVerification(user._id.toString(), email.trim(), hostUrl)
+}
+
+// Change email
+const changeEmail = async (userId: string, password: string, newEmail: string, hostUrl: string) => {
+    newEmail = newEmail.trim()
+    const user = await User.findOne({ _id: userId })
+    if (!user) throw new StandardError(5)
+    const auth = await bcrypt.compare(password, user.password)
+    if (!auth) throw new StandardError(7)
+    if (user.email === newEmail.toLowerCase().trim()) throw new StandardError(13)
+    await prepareForEmailVerification(newEmail, userId)
+    await beginEmailVerification(userId, newEmail, hostUrl)
+}
+
+// Complete the email verification process using the provided key
+const verifyEmail = async (verificationJWT: string) => {
+    let data: any = null
+    try {
+        data = await decodeToken(verificationJWT, <string>process.env.JWT_EMAIL_VERIFICATION_KEY)
+    } catch (err) {
+        throw new StandardError(9)
+    }
+    if (!data.id || !data.email) throw new StandardError(9)
+    const user = await User.findOne({ _id: data.id })
+    if (!user) throw new StandardError(9)
+    await User.updateOne({ _id: user._id }, { $set: { email: data.email, verified: true } }, { runValidators: true })
 }
 
 // Checks that password satisfies requirements
@@ -47,19 +99,16 @@ const assignNewRefreshToken = async (userId: string, ip: string, userAgent: stri
     return refreshToken
 }
 
-// Signup
-const signup = async (email: string, password: string) => {
-    await User.create({ email, password: await checkAndHashPassword(password) })
-}
-
 // Login
 const login = async (email: string, password: string, ip: string, userAgent: string) => {
+    email = email.trim()
     const user = await User.findOne({ email })
     if (!user) throw new StandardError(2)
     const auth = await bcrypt.compare(password, user.password)
     if (!auth) throw new StandardError(2)
+    if (user.pendingVerification) if (user.pendingVerification.email === email) throw new StandardError(11)
     const refreshToken = await assignNewRefreshToken(user._id, ip, userAgent)
-    return { token: createToken(user._id), refreshToken }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, 5), refreshToken }
 }
 
 // Get a new token using a refresh token
@@ -72,7 +121,7 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
         { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } },
         { runValidators: true }
     )
-    return { token: createToken(user._id) }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, 5) }
 }
 
 // Get list of 'devices' (refresh token info)
@@ -105,14 +154,6 @@ const changePassword = async (userId: string, password: string, newPassword: str
     if (revokeRefreshTokens) return { refreshToken: await assignNewRefreshToken(userId, ip, userAgent) } // If existing tokens were revoked, return a new one so client doesn't get logged out
 }
 
-// Change email
-const changeEmail = async (userId: string, password: string, newEmail: string) => {
-    const user = await User.findOne({ _id: userId })
-    if (!user) throw new StandardError(5)
-    const auth = await bcrypt.compare(password, user.password)
-    if (!auth) throw new StandardError(7)
-    await User.updateOne({ _id: userId }, { $set: { email: newEmail } }, { runValidators: true })
-}
+// TODO: Forgot password
 
-
-export default { signup, login, token, logins, revokeRefreshToken, changePassword, changeEmail }
+export default { signup, verifyEmail, login, token, logins, revokeRefreshToken, changePassword, changeEmail }

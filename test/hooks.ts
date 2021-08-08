@@ -1,14 +1,17 @@
 // Mocha root hook plugins for tests
 
-import { connectDB, disconnectDB, ensureEnvVars } from '../src/connection';
+import { ensureEnvVars } from '../src/funcs/validators'
+import { connectDB, disconnectDB } from '../src/funcs/dbConnection'
 import { RootHookObject } from 'mocha'
+import { createTransport } from '../src/funcs/emailer'
 
 const mochaHooks: RootHookObject = {
-    beforeEach: function (done: Function) {
+    beforeAll: function (done: Function) {
         ensureEnvVars()
-        connectDB().then(() => {
-            done()
-        }).catch(err => done(err))
+        done()
+    },
+    beforeEach: function (done: Function) {
+        connectDB().then(() => done()).catch(err => done(err))
     },
     afterEach: function (done: Function) {
         disconnectDB().then(() => {

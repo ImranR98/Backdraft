@@ -5,12 +5,11 @@ import mongoose from 'mongoose'
 import validator from 'validator'
 
 // Define refresh token sub-schema
-// No use setting required validators as these are ignored when the sub-schema is in an array, as it is below
 const refreshTokenSchema = new mongoose.Schema({
-  refreshToken: String,
-  ip: String,
+  refreshToken: { type: String, required: true },
+  ip: { type: String, required: true },
   userAgent: String,
-  date: Date
+  date: { type: Date, default: new Date() }, // For some reason setting this to required causes an error
 })
 
 // Define user schema
@@ -22,11 +21,12 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     validate: [validator.isEmail, 'Email is invalid']
   },
+  verified: { type: Boolean, default: false },
   password: {
     type: String,
     required: [true, 'Password not provided'],
   },
-  refreshTokens: [refreshTokenSchema]
+  refreshTokens: [refreshTokenSchema],
 })
 
 // Define and export the model

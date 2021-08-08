@@ -53,6 +53,31 @@ class StandardError {
                 this.errorCode = 'INVALID_PASSWORD'
                 this.message = 'Password does not fulfill requirements'
                 break;
+            case 9:
+                this.httpCode = 400
+                this.errorCode = 'INVALID_VERIFICATION_KEY'
+                this.message = 'Email verification key is invalid'
+                break;
+            case 10:
+                this.httpCode = 400
+                this.errorCode = 'USER_ALREADY_VERIFIED'
+                this.message = 'You are already verified'
+                break;
+            case 11:
+                this.httpCode = 400
+                this.errorCode = 'USER_NOT_VERIFIED'
+                this.message = 'You must verify your email first'
+                break;
+            case 12:
+                this.httpCode = 400
+                this.errorCode = 'EMAIL_IN_USE'
+                this.message = 'That email is already in use'
+                break;
+            case 13:
+                this.httpCode = 400
+                this.errorCode = 'IS_CURRENT_EMAIL'
+                this.message = 'That is your current email'
+                break;
             default:
                 this.httpCode = 400
                 this.errorCode = 'GENERAL_ERROR'
@@ -108,6 +133,7 @@ const getMessageForValidationError = (err: any) => {
 const standardizeError = (err: any) => {
     if (err instanceof StandardError) return err
     if (process.env.NODE_ENV !== 'test') logger.error(err)
+    else logger.debug(err)
     const error = new StandardError()
     if (typeof err === 'string') error.message = err
     if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)
