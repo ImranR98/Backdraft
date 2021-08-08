@@ -21,11 +21,11 @@ const ensureEnvVars = () => {
     if (typeof process.env[envRequirements[i]] !== 'string') envValid = false
     else if (process.env[envRequirements[i]]?.length === 0) envValid = false
   }
-  if (!envValid) throw 'One or more environment variables are missing'
+  if (!envValid) throw new Error('One or more environment variables are missing')
   try {
     JSON.parse(<string>process.env.STRINGIFIED_NODEMAILER_OPTIONS_JSON)
   } catch (err) {
-    throw 'The STRINGIFIED_NODEMAILER_OPTIONS_JSON environment variable is not valid JSON'
+    throw new Error('The STRINGIFIED_NODEMAILER_OPTIONS_JSON environment variable is not valid JSON')
   }
 }
 
