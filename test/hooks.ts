@@ -1,9 +1,8 @@
 // Mocha root hook plugins for tests
 
-import { ensureEnvVars } from '../src/funcs/validators'
-import { connectDB, disconnectDB } from '../src/funcs/dbConnection'
+import { ensureEnvVars } from '../src/funcs/other'
+import { connectDB, disconnectDB } from '../src/db/dbConnection'
 import { RootHookObject } from 'mocha'
-import { createTransport } from '../src/funcs/emailer'
 
 const mochaHooks: RootHookObject = {
     beforeAll: function (done: Function) {

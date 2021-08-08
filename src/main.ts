@@ -1,8 +1,8 @@
 // Main Express server
 
 import { app } from './funcs/express'
-import { connectDB } from './funcs/dbConnection'
-import { ensureEnvVars } from './funcs/validators'
+import { connectDB } from './db/dbConnection'
+import { ensureEnvVars } from './funcs/other'
 import { createTransport } from './funcs/emailer'
 import logger from './funcs/logger'
 

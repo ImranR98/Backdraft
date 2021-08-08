@@ -1,7 +1,6 @@
-// Various validation and JWT related functions
+// Various validation and other functions that don't fit elsewhere
 
 import { StandardError } from './errors'
-import jwt, { VerifyErrors } from 'jsonwebtoken'
 
 // Ensures the provided object contains all string properties named in the props array
 const validateStringArgs = (object: any, props: string[]) => {
@@ -29,35 +28,4 @@ const ensureEnvVars = () => {
   }
 }
 
-const createJWT = (data: Object, signingKey: string, expiresInMinutes: number) => {
-  return jwt.sign(data, signingKey, {
-      expiresIn: expiresInMinutes * 60
-  })
-}
-
-// Parse raw token (remove 'Bearer')
-const trimToken = (token: string | undefined) => {
-  if (!token) return undefined
-  if (token.indexOf('Bearer ') != 0) return token
-  return token.slice(7)
-}
-
-// Decode raw token if given
-const decodeJWT = (token: string | undefined, signingKey: string) => {
-  return new Promise((resolve, reject) => {
-    token = trimToken(token?.toString())
-    if (token) {
-      jwt.verify(token, signingKey, (err: VerifyErrors | null, decodedToken: object | undefined) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(decodedToken)
-        }
-      })
-    } else {
-      reject()
-    }
-  })
-}
-
-export { validateStringArgs, ensureEnvVars, createJWT, decodeJWT as decodeToken }
+export { validateStringArgs, ensureEnvVars }
