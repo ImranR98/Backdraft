@@ -26,7 +26,7 @@ const prepareForEmailVerification = async (email: string, userId: string | null 
 
 // Begin email verification process by generating verification JWT and sending email
 const beginEmailVerification = async (userId: string, email: string, hostUrl: string) => {
-    let verificationToken = createJWT({ id: userId, email }, <string>process.env.JWT_KEY, 60) // TODO: Use a different key
+    let verificationToken = createJWT({ id: userId, email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, 60)
     await User.updateOne({ _id: userId }, { $set: { email, verified: false } }, { runValidators: true })
     await sendEmail(email, 'Email Verification Key',
         `To verify this email, go to ${hostUrl}/verify-email/${verificationToken}. This will expire shortly.`,
@@ -59,7 +59,7 @@ const changeEmail = async (userId: string, password: string, newEmail: string, h
 const verifyEmail = async (verificationJWT: string) => {
     let data: any = null
     try {
-        data = await decodeToken(verificationJWT, <string>process.env.JWT_KEY) // TODO: Change to a different key
+        data = await decodeToken(verificationJWT, <string>process.env.JWT_EMAIL_VERIFICATION_KEY)
     } catch (err) {
         throw new StandardError(9)
     }
@@ -108,7 +108,7 @@ const login = async (email: string, password: string, ip: string, userAgent: str
     if (!auth) throw new StandardError(2)
     if (user.pendingVerification) if (user.pendingVerification.email === email) throw new StandardError(11)
     const refreshToken = await assignNewRefreshToken(user._id, ip, userAgent)
-    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_KEY, 5), refreshToken }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, 5), refreshToken }
 }
 
 // Get a new token using a refresh token
@@ -121,7 +121,7 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
         { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } },
         { runValidators: true }
     )
-    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_KEY, 5) }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, 5) }
 }
 
 // Get list of 'devices' (refresh token info)

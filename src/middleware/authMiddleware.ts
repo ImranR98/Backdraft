@@ -10,7 +10,7 @@ import { decodeToken } from '../funcs/validators'
 // Ensure a valid JWT exists if not, send 401
 const requireAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
-    const decodedToken = await decodeToken(req.headers.authorization?.toString(), <string>process.env.JWT_KEY)
+    const decodedToken = await decodeToken(req.headers.authorization?.toString(), <string>process.env.JWT_AUTH_KEY)
     next()
   } catch (err) {
     const error = new StandardError(3)
@@ -21,7 +21,7 @@ const requireAuth = async (req: express.Request, res: express.Response, next: ex
 // If a valid JWT exists, add its info to the request
 const checkUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
-    const decodedToken = await decodeToken(req.headers.authorization?.toString(), <string>process.env.JWT_KEY)
+    const decodedToken = await decodeToken(req.headers.authorization?.toString(), <string>process.env.JWT_AUTH_KEY)
     let user = await User.findById((<any>decodedToken).id)
     res.locals.user = { _id: user._id, email: user.email }
     next()

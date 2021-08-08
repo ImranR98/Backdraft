@@ -92,6 +92,11 @@ Each `.test.ts` file in the `test` directory contains functional Mocha tests for
 In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to a new, empty test database (in memory, using mongodb-memory-server). This also means that, for example, a test that requires the existence of a logged in user would need a signup and login to be done first in `before` or `beforeEach` hooks. While this does lead to repetition, it is the only way to keep tests independent.
 
 
+# TODO
+- Forgot Password
+- Automated tests for refresh token removal policies
+
+
 
 ------
 

@@ -18,7 +18,7 @@ const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/z
 
 const createTestUser = async (email: string, verified: boolean = true) => {
     const user = await User.create({ email, verified, password: hashedPassword })
-    const verificationJWT = createJWT({ id: user._id, email: user.email }, <string>process.env.JWT_KEY, 60) // TODO: Change this when changed elsewhere
+    const verificationJWT = createJWT({ id: user._id, email: user.email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, 60)
     return { user, verificationJWT }
 }
 

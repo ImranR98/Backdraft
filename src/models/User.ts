@@ -9,7 +9,7 @@ const refreshTokenSchema = new mongoose.Schema({
   refreshToken: { type: String, required: true },
   ip: { type: String, required: true },
   userAgent: String,
-  date: { type: Date, default: new Date() }, // For some reason setting this to required causes an error - TODO
+  date: { type: Date, default: new Date() }, // For some reason setting this to required causes an error
 })
 
 // Define user schema

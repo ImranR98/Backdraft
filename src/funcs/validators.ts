@@ -15,7 +15,7 @@ const validateStringArgs = (object: any, props: string[]) => {
 
 // Ensures required environment variables exist
 const ensureEnvVars = () => {
-  const envRequirements = ['JWT_KEY', 'DB_CONN_STRING', 'STRINGIFIED_NODEMAILER_OPTIONS_JSON', 'SENDER_EMAIL']
+  const envRequirements = ['JWT_AUTH_KEY', 'JWT_EMAIL_VERIFICATION_KEY', 'DB_CONN_STRING', 'STRINGIFIED_NODEMAILER_OPTIONS_JSON', 'SENDER_EMAIL']
   let envValid = true
   for (let i = 0; i < envRequirements.length && envValid; i++) {
     if (typeof process.env[envRequirements[i]] !== 'string') envValid = false
