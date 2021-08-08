@@ -2,34 +2,31 @@
 // Provides middleware that attaches user info to a request from the JWT if present and valid
 // Also provides middleware that throws an error if the JWT is absent or invalid
 
-import User from '../models/User'
 import express from 'express'
 import { StandardError } from '../funcs/errors'
-import { decodeToken } from '../funcs/validators'
+import { decodeJWT } from '../funcs/jwt'
 
-// Ensure a valid JWT exists if not, send 401
+// Middleware to ensures a valid JWT exists if not, send 401
 const requireAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
-    await decodeToken(req.headers.authorization?.toString(), <string>process.env.JWT_AUTH_KEY)
-    next()
+      await decodeJWT(req.headers.authorization?.toString(), <string>process.env.JWT_AUTH_KEY)
+      next()
   } catch (err) {
-    const error = new StandardError(3)
-    res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
+      const error = new StandardError(3)
+      res.status(error.httpCode).send({ code: error.errorCode, message: error.message })
   }
 }
 
-// If a valid JWT exists, add its info to the request
+// Middleware to check if a valid JWT exists and add its info to the request
 const checkUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
-    const decodedToken = await decodeToken(req.headers.authorization?.toString(), <string>process.env.JWT_AUTH_KEY)
-    let user = await User.findById((<any>decodedToken).id)
-    res.locals.user = { _id: user._id, email: user.email }
-    next()
+      const decodedToken = await decodeJWT(req.headers.authorization?.toString(), <string>process.env.JWT_AUTH_KEY)
+      res.locals.user = { _id: (<any>decodedToken).id, email: (<any>decodedToken).email }
+      next()
   } catch (err) {
-    res.locals.user = null
-    next()
+      res.locals.user = null
+      next()
   }
 }
-
 
 export { requireAuth, checkUser }

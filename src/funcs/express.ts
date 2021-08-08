@@ -3,8 +3,8 @@
 // Module imports
 import express from 'express'
 import authRoutes from '../routes/authRoutes'
-import { checkUser } from '../middleware/authMiddleware'
 import { standardizeError } from './errors'
+import { checkUser } from '../middleware/authMiddleware'
 import dotenv from 'dotenv'
 import helmet from 'helmet'
 import logger from './logger'
@@ -13,7 +13,7 @@ import morgan from 'morgan'
 // Import env. vars (assumes they exist; should have been checked on server start)
 dotenv.config()
 
-// Prepare Express and middleware
+// Prepare Express app and configure middleware
 const app: express.Application = express()
 app.use(express.json())
 app.use(checkUser) // Always add user data from the JWT, if any, to the current request

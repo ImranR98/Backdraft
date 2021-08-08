@@ -7,9 +7,9 @@ import request from 'supertest'
 
 import { app } from '../src/funcs/express'
 
-import User from '../src/models/User'
+import { createUser } from '../src/db/User'
 
-import { createJWT } from '../src/funcs/validators'
+import { createJWT } from '../src/funcs/jwt'
 
 // Test user data
 const email = 'person@example.com'
@@ -17,7 +17,7 @@ const password = 'zoom4321'
 const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/zBIZu'
 
 const createTestUser = async (email: string, verified: boolean = true) => {
-    const user = await User.create({ email, verified, password: hashedPassword })
+    const user = await createUser(email, hashedPassword, verified)
     const verificationJWT = createJWT({ id: user._id, email: user.email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, 60)
     return { user, verificationJWT }
 }

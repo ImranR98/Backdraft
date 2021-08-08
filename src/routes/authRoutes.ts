@@ -1,10 +1,10 @@
 // Routes used for authentication related endpoints
 
 import { Router } from 'express'
-import { requireAuth } from '../middleware/authMiddleware'
 import authController from '../controllers/authController'
 import express from 'express'
-import { validateStringArgs } from '../funcs/validators'
+import { requireAuth } from '../middleware/authMiddleware'
+import { validateStringArgs } from '../funcs/other'
 
 const router = Router()
 
