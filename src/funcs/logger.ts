@@ -9,7 +9,7 @@ dotenv.config()
 const logger = winston.createLogger({
     transports: [
         new winston.transports.Console({
-            level: (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' ? 'debug' : 'http'),
+            level: ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') ? 'debug' : 'http'),
             stderrLevels: ['error'],
             format: winston.format.combine(
                 winston.format.colorize(),

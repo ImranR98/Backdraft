@@ -1,7 +1,5 @@
 // Tests for API endpoints in authRoutes
 
-process.env.NODE_ENV = 'test'
-
 import { expect } from 'chai'
 import request from 'supertest'
 

@@ -132,8 +132,8 @@ const getMessageForValidationError = (err: any) => {
 // Converts any input into a standard error as best as possible
 const standardizeError = (err: any) => {
     if (err instanceof StandardError) return err
-    if (process.env.NODE_ENV !== 'test') logger.error(err)
-    else logger.debug(err)
+    if (process.env.NODE_ENV === 'development') logger.error(err)
+    if (process.env.NODE_ENV === 'test') logger.debug(err)
     const error = new StandardError()
     if (typeof err === 'string') error.message = err
     if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)

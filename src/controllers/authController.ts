@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { StandardError } from '../funcs/errors'
 import { sendEmail } from '../funcs/emailer'
-import { createJWT, decodeJWT } from '../funcs/jwt'
+import { createJWT, verifyAndDecodeJWT } from '../funcs/jwt'
 
 // Checks that password satisfies requirements
 const isPasswordValid = (password: string) => password.length >= 6
@@ -79,7 +79,7 @@ const changeEmail = async (userId: string, password: string, newEmail: string, h
 const verifyEmail = async (verificationJWT: string) => {
     let data: any = null
     try {
-        data = await decodeJWT(verificationJWT, <string>process.env.JWT_EMAIL_VERIFICATION_KEY)
+        data = await verifyAndDecodeJWT(verificationJWT, <string>process.env.JWT_EMAIL_VERIFICATION_KEY)
     } catch (err) {
         throw new StandardError(9)
     }
