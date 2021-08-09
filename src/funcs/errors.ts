@@ -55,7 +55,7 @@ class StandardError {
                 break;
             case 9:
                 this.httpCode = 400
-                this.errorCode = 'INVALID_VERIFICATION_KEY'
+                this.errorCode = 'INVALID_EMAIL_VERIFICATION_TOKEN'
                 this.message = 'Email verification key is invalid'
                 break;
             case 10:
@@ -80,7 +80,7 @@ class StandardError {
                 break;
             case 14:
                 this.httpCode = 400
-                this.errorCode = 'INVALID_PASSWORD_RESET_KEY'
+                this.errorCode = 'INVALID_PASSWORD_RESET_TOKEN'
                 this.message = 'Password reset key is invalid'
             default:
                 this.httpCode = 400

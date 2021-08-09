@@ -17,7 +17,8 @@ const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/z
 const createTestUser = async (email: string, verified: boolean = true) => {
     const user = await createUser(email, hashedPassword, verified)
     const emailVerificationToken = createJWT({ id: user._id, email: user.email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, 60)
-    return { user, emailVerificationToken }
+    const passwordVerificationToken = createJWT({ userId: user._id }, user.password, 60)
+    return { user, emailVerificationToken, passwordVerificationToken }
 }
 
 describe('Authentication related API tests', function () {
@@ -49,10 +50,12 @@ describe('Authentication related API tests', function () {
 
     describe('When the DB contains an unverified user', function () {
         let emailVerificationToken: string | null = null
+        let passwordVerificationToken: string | null = null
 
         beforeEach('Create test user', function (done) {
             createTestUser(email, false).then((data) => {
                 emailVerificationToken = data.emailVerificationToken
+                passwordVerificationToken = data.passwordVerificationToken
                 done()
             }).catch(err => done(err))
         })
@@ -62,6 +65,39 @@ describe('Authentication related API tests', function () {
             it('With the same email as the existing unverified user', function (done) {
                 request(app).post('/api/signup').send({ email, password }).then((res) => {
                     expect(res.status).to.equal(201)
+                    done()
+                }).catch((err) => done(err))
+            })
+        })
+
+        describe('Request password reset', function () {
+            this.timeout('50000')
+            it('With a valid email', function (done) {
+                request(app).post('/api/request-password-reset').send({ email }).then((res) => {
+                    expect(res.status).to.equal(200)
+                    done()
+                }).catch((err) => done(err))
+            })
+            it('With an invalid email', function (done) {
+                request(app).post('/api/request-password-reset').send({ email: 'x' + email }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'MISSING_USER' })
+                    done()
+                }).catch((err) => done(err))
+            })
+        })
+
+        describe('Reset password', function () {
+            it('With a valid key', function (done) {
+                request(app).post('/api/reset-password').send({ passwordVerificationToken }).then((res) => {
+                    expect(res.status).to.equal(200)
+                    done()
+                }).catch((err) => done(err))
+            })
+            it('With an invalid key', function (done) {
+                request(app).post('/api/reset-password').send({ passwordVerificationToken: passwordVerificationToken + 'x' }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'INVALID_PASSWORD_RESET_TOKEN' })
                     done()
                 }).catch((err) => done(err))
             })
@@ -77,7 +113,7 @@ describe('Authentication related API tests', function () {
             it('With an invalid key', function (done) {
                 request(app).post('/api/verify-email').send({ emailVerificationToken: emailVerificationToken + 'x' }).then((res) => {
                     expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'INVALID_VERIFICATION_KEY' })
+                    expect(res.body).to.contain({ code: 'INVALID_EMAIL_VERIFICATION_TOKEN' })
                     done()
                 }).catch((err) => done(err))
             })
