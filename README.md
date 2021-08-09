@@ -95,7 +95,10 @@ In principle, each test should be fully independent and isolated from others. Th
 
 
 # TODO
-- Look into `express-openapi` to see if it can be used to make API more organized, maintainable, and less "custom" (more "RESTful"), and to auto-generate docs.
+- Complete API overhaul using `tsoa` and `swagger-ui-express`. Benefits:
+    - Auto generated API docs in the OpenAPI format; allows for easier client development.
+    - Less "custom" and more "RESTful" API behavior.
+    - `tsoa` is type safe and includes validation; no need to do custom validation.
 
 
 ------
