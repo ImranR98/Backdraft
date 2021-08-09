@@ -82,6 +82,7 @@ class StandardError {
                 this.httpCode = 400
                 this.errorCode = 'INVALID_PASSWORD_RESET_TOKEN'
                 this.message = 'Password reset key is invalid'
+                break;
             default:
                 this.httpCode = 400
                 this.errorCode = 'GENERAL_ERROR'
@@ -137,7 +138,7 @@ const getMessageForValidationError = (err: any) => {
 const standardizeError = (err: any) => {
     if (err instanceof StandardError) return err
     if (process.env.NODE_ENV === 'development') logger.error(err)
-    if (process.env.NODE_ENV === 'test') logger.debug(err)
+    //if (process.env.NODE_ENV === 'test') logger.verbose(err) // Uncomment if needed during testing
     const error = new StandardError()
     if (typeof err === 'string') error.message = err
     if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)

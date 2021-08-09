@@ -172,7 +172,7 @@ const resetPassword = async (passwordResetToken: string, newPassword: string) =>
     } catch (err) {
         throw new StandardError(14)
     }
-    await updateUser(userId, { password: checkAndHashPassword(newPassword), verified: true })
+    await updateUser(userId, { password: await checkAndHashPassword(newPassword), verified: true })
 }
 
 export default { signup, verifyEmail, login, token, logins, revokeRefreshToken, changePassword, changeEmail, beginPasswordReset, resetPassword, REFRESH_TOKEN_CLEANUP_1_DAYS, REFRESH_TOKEN_CLEANUP_2_DAYS, ACCESS_TOKEN_DURATION_MINUTES, EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES, PASSWORD_RESET_TOKEN_DURATION_MINUTES }

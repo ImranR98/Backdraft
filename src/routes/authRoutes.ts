@@ -113,8 +113,8 @@ router.post('/api/request-password-reset',
 router.post('/api/reset-password',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
-            validateStringArgs(req.body, ['passwordResetToken'])
-            await authController.beginPasswordReset(req.body.email, <string>req.headers.host)
+            validateStringArgs(req.body, ['passwordResetToken', 'newPassword'])
+            await authController.resetPassword(req.body.passwordResetToken, req.body.newPassword)
             res.status(200).send()
         } catch (err) {
             next(err)

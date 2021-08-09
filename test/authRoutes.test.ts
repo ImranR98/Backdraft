@@ -18,7 +18,7 @@ const password = 'zoom4321'
 const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/zBIZu'
 
 const createTestUser = async (email: string, verified: boolean = true) => {
-    const user = await createUser(email, hashedPassword, verified)
+    let user = await createUser(email, hashedPassword, verified)
     const emailVerificationToken = createJWT({ id: user._id, email: user.email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, authController.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES)
     const passwordResetToken = createJWT({ userId: user._id }, user.password, authController.PASSWORD_RESET_TOKEN_DURATION_MINUTES)
     let [refreshToken, token] = ['', '']
@@ -27,6 +27,7 @@ const createTestUser = async (email: string, verified: boolean = true) => {
         await addUserRefreshToken(user._id, refreshToken, '::ffff:127.0.0.1', '')
         token = createJWT({ id: user._id }, <string>process.env.JWT_AUTH_KEY, authController.ACCESS_TOKEN_DURATION_MINUTES)
     }
+    user = await findUserById(user._id)
     return { user, emailVerificationToken, passwordResetToken, refreshToken, token }
 }
 
@@ -34,7 +35,7 @@ describe('Authentication related API tests', function () {
     describe('When the DB is empty', function () {
         describe('Sign up', function () {
             this.timeout('50000')
-            it('With valid userData', function (done) {
+            it('With valid credentials', function (done) {
                 request(app).post('/api/signup').send({ email, password }).then((res) => {
                     expect(res.status).to.equal(201)
                     done()
@@ -96,13 +97,13 @@ describe('Authentication related API tests', function () {
 
         describe('Reset password', function () {
             it('With a valid key', function (done) {
-                request(app).post('/api/reset-password').send({ passwordResetToken: userData.passwordResetToken }).then((res) => {
+                request(app).post('/api/reset-password').send({ passwordResetToken: userData.passwordResetToken, newPassword: password + 'x' }).then((res) => {
                     expect(res.status).to.equal(200)
                     done()
                 }).catch((err) => done(err))
             })
             it('With an invalid key', function (done) {
-                request(app).post('/api/reset-password').send({ passwordResetToken: userData.passwordResetToken + 'x' }).then((res) => {
+                request(app).post('/api/reset-password').send({ passwordResetToken: userData.passwordResetToken + 'x', newPassword: password + 'x' }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_PASSWORD_RESET_TOKEN' })
                     done()
@@ -149,7 +150,7 @@ describe('Authentication related API tests', function () {
         })
 
         describe('Login', function () {
-            it('With valid userData', function (done) {
+            it('With valid credentials', function (done) {
                 request(app).post('/api/login').send({ email, password }).then((res) => {
                     expect(res.status).to.equal(200)
                     expect(res.body).to.have.property('token')
@@ -170,6 +171,18 @@ describe('Authentication related API tests', function () {
                     expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
                     done()
                 }).catch((err) => done(err))
+            })
+            it('Refresh token cleanup policy (during login)', function (done) {
+                (async () => {
+                    const refreshTokenCount = async () => ((await findUserById(userData.user._id)).refreshTokens).length
+                    await addUserRefreshToken(userData.user._id, userData.refreshToken + 'w', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * authController.REFRESH_TOKEN_CLEANUP_1_DAYS))
+                    await addUserRefreshToken(userData.user._id, userData.refreshToken + 'x', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * authController.REFRESH_TOKEN_CLEANUP_1_DAYS))
+                    await addUserRefreshToken(userData.user._id, userData.refreshToken + 'y', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * authController.REFRESH_TOKEN_CLEANUP_2_DAYS))
+                    await addUserRefreshToken(userData.user._id, userData.refreshToken + 'z', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * authController.REFRESH_TOKEN_CLEANUP_2_DAYS))
+                    if (await refreshTokenCount() !== 4) throw null
+                    await request(app).post('/api/login').send({ email, password })
+                    if (await refreshTokenCount() !== 2) throw null
+                })().then(() => done()).catch(err => done(err))
             })
         })
 
@@ -206,20 +219,20 @@ describe('Authentication related API tests', function () {
 
         describe('Revoke login', function () {
             it('With a valid tokenId', function (done) {
-                request(app).post('/api/revoke-login').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.refreshToken }).then((res) => {
+                request(app).post('/api/revoke-login').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0]._id }).then((res) => {
                     expect(res.status).to.equal(200)
                     done()
                 }).catch((err) => done(err))
             })
             it('With an invalid tokenId', function (done) {
-                request(app).post('/api/revoke-login').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.refreshToken + 'x' }).then((res) => {
+                request(app).post('/api/revoke-login').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0]._id + 'x' }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'GENERAL_ERROR' })
                     done()
                 }).catch((err) => done(err))
             })
             it('With a nonexistent tokenId', function (done) {
-                let replacementTokenId = userData.refreshToken.slice(0, -1) + (userData.refreshToken.slice(-1) === '1' ? '2' : '1')
+                let replacementTokenId = userData.user.refreshTokens[0]._id.toString().slice(0, -1) + (userData.user.refreshTokens[0]._id.toString().slice(-1) === '1' ? '2' : '1')
                 request(app).post('/api/revoke-login').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: replacementTokenId }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'MISSING_ITEM' })
@@ -287,22 +300,6 @@ describe('Authentication related API tests', function () {
                     done()
                 }).catch((err) => done(err))
             })
-        })
-
-        it('Refresh token cleanup policy (during login)', async function (done) {
-            const refreshTokenCount = async () => ((await findUserById(userData.user._id)).refreshTokens).length
-            try {
-                await addUserRefreshToken(userData.user._id, userData.refreshToken + 'w', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * authController.REFRESH_TOKEN_CLEANUP_1_DAYS))
-                await addUserRefreshToken(userData.user._id, userData.refreshToken + 'x', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * authController.REFRESH_TOKEN_CLEANUP_1_DAYS))
-                await addUserRefreshToken(userData.user._id, userData.refreshToken + 'y', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * authController.REFRESH_TOKEN_CLEANUP_2_DAYS))
-                await addUserRefreshToken(userData.user._id, userData.refreshToken + 'z', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * authController.REFRESH_TOKEN_CLEANUP_2_DAYS))
-                if (await refreshTokenCount() !== 4) throw null
-                await request(app).post('/api/login').send({ email, password })
-                if (await refreshTokenCount() !== 2) throw null
-                done()
-            } catch (err) {
-                done(err)
-            }
         })
 
         describe('When the DB contains a verified user and a second unverified user', function () {
