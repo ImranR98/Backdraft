@@ -5,7 +5,7 @@ import validator from 'validator'
 
 // Define refresh token sub-schema
 const refreshTokenSchema = new mongoose.Schema({
-  refreshToken: { type: String, required: true },
+  refreshToken: { type: String, required: true, unique: true },
   ip: { type: String, required: true },
   userAgent: String,
   date: { type: Date, default: new Date() }, // For some reason setting this to required causes an error

@@ -11,6 +11,7 @@ import { createJWT, decodeJWT, verifyAndDecodeJWT } from '../funcs/jwt'
 // Time constants
 const REFRESH_TOKEN_CLEANUP_1_DAYS = 30.44
 const REFRESH_TOKEN_CLEANUP_2_DAYS = 365.2425
+const ACCESS_TOKEN_DURATION_MINUTES = 5
 const EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES = 60
 const PASSWORD_RESET_TOKEN_DURATION_MINUTES = 60
 
@@ -105,7 +106,7 @@ const login = async (email: string, password: string, ip: string, userAgent: str
     if (!auth) throw new StandardError(2)
     if (user.pendingVerification) if (user.pendingVerification.email === email) throw new StandardError(11)
     const refreshToken = await assignNewRefreshToken(user._id, ip, userAgent)
-    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, 5), refreshToken }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, ACCESS_TOKEN_DURATION_MINUTES), refreshToken }
 }
 
 // Get a new token using a refresh token
@@ -114,7 +115,7 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
     if (!user) throw new StandardError(4)
     // Update the refresh token last used date, along with IP and user agent (although those are likely unchanged)
     await updateUserRefreshToken(user._id, refreshToken, ip, userAgent)
-    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, 5) }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, ACCESS_TOKEN_DURATION_MINUTES) }
 }
 
 // Get list of 'devices' (refresh token info)
@@ -174,4 +175,4 @@ const resetPassword = async (passwordResetToken: string, newPassword: string) =>
     await updateUser(userId, { password: checkAndHashPassword(newPassword), verified: true })
 }
 
-export default { signup, verifyEmail, login, token, logins, revokeRefreshToken, changePassword, changeEmail, beginPasswordReset, resetPassword }
+export default { signup, verifyEmail, login, token, logins, revokeRefreshToken, changePassword, changeEmail, beginPasswordReset, resetPassword, REFRESH_TOKEN_CLEANUP_1_DAYS, REFRESH_TOKEN_CLEANUP_2_DAYS, ACCESS_TOKEN_DURATION_MINUTES, EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES, PASSWORD_RESET_TOKEN_DURATION_MINUTES }

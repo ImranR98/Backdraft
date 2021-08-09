@@ -96,8 +96,6 @@ In principle, each test should be fully independent and isolated from others. Th
 
 # TODO
 - Look into `express-openapi` to see if it can be used to make API more organized, maintainable, and less "custom" (more "RESTful"), and to auto-generate docs.
-- Automated tests for refresh token removal policies (and just more organized tests in general)
-
 
 
 ------
