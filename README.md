@@ -20,7 +20,7 @@ This project helps avoid such issues by providing a solid foundation that includ
 - Automated testing for all API endpoints using Mocha, Chai, SuperTest, and mongodb-memory-server.
 - Standardized logging using Winston and Morgan.
 - Mongoose and TypeScript used for easier database querying and increased type safety.
-- User email verification and enabled by Nodemailer.
+- User email verification and password reset enabled by Nodemailer.
 
 
 
@@ -95,9 +95,7 @@ In principle, each test should be fully independent and isolated from others. Th
 
 
 # TODO
-- Forgot password (probably using a JWT too, with existing password hash as signing key)
-- Automated tests for refresh token removal policies (and just more organized tests in general)
-
+- Look into `express-openapi` to see if it can be used to make API more organized, maintainable, and less "custom" (more "RESTful"), and to auto-generate docs.
 
 
 ------

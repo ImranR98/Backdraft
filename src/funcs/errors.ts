@@ -55,7 +55,7 @@ class StandardError {
                 break;
             case 9:
                 this.httpCode = 400
-                this.errorCode = 'INVALID_VERIFICATION_KEY'
+                this.errorCode = 'INVALID_EMAIL_VERIFICATION_TOKEN'
                 this.message = 'Email verification key is invalid'
                 break;
             case 10:
@@ -77,6 +77,11 @@ class StandardError {
                 this.httpCode = 400
                 this.errorCode = 'IS_CURRENT_EMAIL'
                 this.message = 'That is your current email'
+                break;
+            case 14:
+                this.httpCode = 400
+                this.errorCode = 'INVALID_PASSWORD_RESET_TOKEN'
+                this.message = 'Password reset key is invalid'
                 break;
             default:
                 this.httpCode = 400
@@ -132,8 +137,8 @@ const getMessageForValidationError = (err: any) => {
 // Converts any input into a standard error as best as possible
 const standardizeError = (err: any) => {
     if (err instanceof StandardError) return err
-    if (process.env.NODE_ENV !== 'test') logger.error(err)
-    else logger.debug(err)
+    if (process.env.NODE_ENV === 'development') logger.error(err)
+    //if (process.env.NODE_ENV === 'test') logger.verbose(err) // Uncomment if needed during testing
     const error = new StandardError()
     if (typeof err === 'string') error.message = err
     if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)

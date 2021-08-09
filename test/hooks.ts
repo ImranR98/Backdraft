@@ -1,4 +1,5 @@
 // Mocha root hook plugins for tests
+process.env.NODE_ENV = 'test' // Must be above imports
 
 import { ensureEnvVars } from '../src/funcs/other'
 import { connectDB, disconnectDB } from '../src/db/dbConnection'

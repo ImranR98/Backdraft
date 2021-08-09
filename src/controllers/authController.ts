@@ -6,7 +6,14 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { StandardError } from '../funcs/errors'
 import { sendEmail } from '../funcs/emailer'
-import { createJWT, decodeJWT } from '../funcs/jwt'
+import { createJWT, decodeJWT, verifyAndDecodeJWT } from '../funcs/jwt'
+
+// Time constants
+const REFRESH_TOKEN_CLEANUP_1_DAYS = 30.44
+const REFRESH_TOKEN_CLEANUP_2_DAYS = 365.2425
+const ACCESS_TOKEN_DURATION_MINUTES = 5
+const EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES = 60
+const PASSWORD_RESET_TOKEN_DURATION_MINUTES = 60
 
 // Checks that password satisfies requirements
 const isPasswordValid = (password: string) => password.length >= 6
@@ -23,8 +30,8 @@ const assignNewRefreshToken = async (userId: string, ip: string, userAgent: stri
     const refreshToken = crypto.randomBytes(64).toString('hex')
     await addUserRefreshToken(userId, refreshToken, ip, userAgent)
     // Run cleanup
-    await removeOldUserRefreshTokens(userId, new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * 30.44), ip, userAgent) // Unused for at least 30 days and from the same IP, user-agent
-    await removeOldUserRefreshTokens(userId, new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * 365.2425)) // Unused for at least a year
+    await removeOldUserRefreshTokens(userId, new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * REFRESH_TOKEN_CLEANUP_1_DAYS), ip, userAgent) // Unused for at least 30 days and from the same IP, user-agent
+    await removeOldUserRefreshTokens(userId, new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * REFRESH_TOKEN_CLEANUP_2_DAYS)) // Unused for at least a year
     return refreshToken
 }
 
@@ -46,13 +53,14 @@ const prepareForEmailVerification = async (email: string, userId: string | null 
 
 // Begin email verification process by generating verification JWT and sending email
 const beginEmailVerification = async (userId: string, email: string, hostUrl: string) => {
-    let verificationToken = createJWT({ id: userId, email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, 60)
+    const verificationToken = createJWT({ id: userId, email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES)
     await updateUserEmail(userId, email, false)
-    await sendEmail(email, 'Email Verification Key',
-        `To verify this email, go to ${hostUrl}/verify-email/${verificationToken}. This will expire shortly.`,
+    const link = `${hostUrl}/verify-email/${verificationToken}`
+    await sendEmail(email, 'Email Verification Link',
+        `To verify this email, go to ${link}. This will expire in ${EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES} minutes.`,
         `<p>Hi, thanks for signing up!</p>
-<p>Click <a href="${hostUrl}/verify-email/${verificationToken}">here</a> to verify your email. The link will expire shortly.</p>
-<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${hostUrl}/verify-email/${verificationToken}">${hostUrl}/verify-email/${verificationToken}</a></b></small></p>`
+<p>Click <a href="${link}">here</a> to verify your email. The link will expire in ${EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES} minutes.</p>
+<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${link}">${link}</a></b></small></p>`
     )
 }
 
@@ -76,10 +84,10 @@ const changeEmail = async (userId: string, password: string, newEmail: string, h
 }
 
 // Complete the email verification process using the provided key
-const verifyEmail = async (verificationJWT: string) => {
+const verifyEmail = async (emailVerificationToken: string) => {
     let data: any = null
     try {
-        data = await decodeJWT(verificationJWT, <string>process.env.JWT_EMAIL_VERIFICATION_KEY)
+        data = verifyAndDecodeJWT(emailVerificationToken, <string>process.env.JWT_EMAIL_VERIFICATION_KEY)
     } catch (err) {
         throw new StandardError(9)
     }
@@ -98,7 +106,7 @@ const login = async (email: string, password: string, ip: string, userAgent: str
     if (!auth) throw new StandardError(2)
     if (user.pendingVerification) if (user.pendingVerification.email === email) throw new StandardError(11)
     const refreshToken = await assignNewRefreshToken(user._id, ip, userAgent)
-    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, 5), refreshToken }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, ACCESS_TOKEN_DURATION_MINUTES), refreshToken }
 }
 
 // Get a new token using a refresh token
@@ -107,7 +115,7 @@ const token = async (refreshToken: string, ip: string, userAgent: string) => {
     if (!user) throw new StandardError(4)
     // Update the refresh token last used date, along with IP and user agent (although those are likely unchanged)
     await updateUserRefreshToken(user._id, refreshToken, ip, userAgent)
-    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, 5) }
+    return { token: createJWT({ id: user._id.toString() }, <string>process.env.JWT_AUTH_KEY, ACCESS_TOKEN_DURATION_MINUTES) }
 }
 
 // Get list of 'devices' (refresh token info)
@@ -139,4 +147,32 @@ const changePassword = async (userId: string, password: string, newPassword: str
     if (revokeRefreshTokens) return { refreshToken: await assignNewRefreshToken(userId, ip, userAgent) } // If existing tokens were revoked, return a new one so client doesn't get logged out
 }
 
-export default { signup, verifyEmail, login, token, logins, revokeRefreshToken, changePassword, changeEmail }
+const beginPasswordReset = async (email: string, hostUrl: string) => {
+    const user = await findUserByEmail(email)
+    if (!user) throw new StandardError(5)
+    const passwordToken = createJWT({ userId: user._id }, user.password, PASSWORD_RESET_TOKEN_DURATION_MINUTES)
+    const link = `${hostUrl}/reset-password/${passwordToken}`
+    await sendEmail(email, 'Password Reset Link',
+        `To verify this email, go to ${link}. This will expire in ${PASSWORD_RESET_TOKEN_DURATION_MINUTES} minutes.`,
+        `<p>Hi, thanks for signing up!</p>
+<p>Click <a href="${link}">here</a> to verify your email. The link will expire in ${PASSWORD_RESET_TOKEN_DURATION_MINUTES} minutes.</p>
+<p><small><b>If that doesn't work, paste the following link into your browser: <a href="${link}">${link}</a></b></small></p>`
+    )
+}
+
+const resetPassword = async (passwordResetToken: string, newPassword: string) => {
+    let userId = ''
+    try {
+        let data: any = decodeJWT(passwordResetToken)
+        if (!data.userId) throw null
+        const user = await findUserById(data.userId)
+        if (!user) throw null
+        verifyAndDecodeJWT(passwordResetToken, user.password)
+        userId = user._id
+    } catch (err) {
+        throw new StandardError(14)
+    }
+    await updateUser(userId, { password: await checkAndHashPassword(newPassword), verified: true })
+}
+
+export default { signup, verifyEmail, login, token, logins, revokeRefreshToken, changePassword, changeEmail, beginPasswordReset, resetPassword, REFRESH_TOKEN_CLEANUP_1_DAYS, REFRESH_TOKEN_CLEANUP_2_DAYS, ACCESS_TOKEN_DURATION_MINUTES, EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES, PASSWORD_RESET_TOKEN_DURATION_MINUTES }
