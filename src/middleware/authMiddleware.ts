@@ -10,7 +10,7 @@ import { verifyAndDecodeJWT } from '../funcs/jwt'
 const requireAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     if (!req.headers.authorization) throw null
-    await verifyAndDecodeJWT(req.headers.authorization, <string>process.env.JWT_AUTH_KEY)
+    verifyAndDecodeJWT(req.headers.authorization, <string>process.env.JWT_AUTH_KEY)
     next()
   } catch (err) {
     const error = new StandardError(3)
@@ -22,7 +22,7 @@ const requireAuth = async (req: express.Request, res: express.Response, next: ex
 const checkUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   try {
     if (!req.headers.authorization) throw null
-    const decodedToken = await verifyAndDecodeJWT(req.headers.authorization, <string>process.env.JWT_AUTH_KEY)
+    const decodedToken = verifyAndDecodeJWT(req.headers.authorization, <string>process.env.JWT_AUTH_KEY)
     res.locals.user = { _id: (<any>decodedToken).id, email: (<any>decodedToken).email }
     next()
   } catch (err) {

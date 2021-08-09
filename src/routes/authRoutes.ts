@@ -23,8 +23,8 @@ router.post('/api/signup',
 router.post('/api/verify-email',
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         try {
-            validateStringArgs(req.body, ['verificationJWT'])
-            await authController.verifyEmail(req.body.verificationJWT)
+            validateStringArgs(req.body, ['emailVerificationToken'])
+            await authController.verifyEmail(req.body.emailVerificationToken)
             res.status(200).send()
         } catch (err) {
             next(err)
@@ -91,6 +91,30 @@ router.post('/api/change-email', requireAuth,
         try {
             validateStringArgs(req.body, ['password', 'newEmail'])
             await authController.changeEmail(res.locals.user._id, req.body.password, req.body.newEmail, <string>req.headers.host)
+            res.status(200).send()
+        } catch (err) {
+            next(err)
+        }
+    }
+)
+
+router.post('/api/request-password-reset',
+    async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        try {
+            validateStringArgs(req.body, ['email'])
+            await authController.beginPasswordReset(req.body.email, <string>req.headers.host)
+            res.status(200).send()
+        } catch (err) {
+            next(err)
+        }
+    }
+)
+
+router.post('/api/reset-password',
+    async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        try {
+            validateStringArgs(req.body, ['passwordResetToken'])
+            await authController.beginPasswordReset(req.body.email, <string>req.headers.host)
             res.status(200).send()
         } catch (err) {
             next(err)

@@ -16,8 +16,8 @@ const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/z
 
 const createTestUser = async (email: string, verified: boolean = true) => {
     const user = await createUser(email, hashedPassword, verified)
-    const verificationJWT = createJWT({ id: user._id, email: user.email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, 60)
-    return { user, verificationJWT }
+    const emailVerificationToken = createJWT({ id: user._id, email: user.email }, <string>process.env.JWT_EMAIL_VERIFICATION_KEY, 60)
+    return { user, emailVerificationToken }
 }
 
 describe('Authentication related API tests', function () {
@@ -48,11 +48,11 @@ describe('Authentication related API tests', function () {
     })
 
     describe('When the DB contains an unverified user', function () {
-        let verificationJWT: string | null = null
+        let emailVerificationToken: string | null = null
 
         beforeEach('Create test user', function (done) {
             createTestUser(email, false).then((data) => {
-                verificationJWT = data.verificationJWT
+                emailVerificationToken = data.emailVerificationToken
                 done()
             }).catch(err => done(err))
         })
@@ -69,13 +69,13 @@ describe('Authentication related API tests', function () {
 
         describe('Verify email for the existing unverified user', function () {
             it('With a valid key', function (done) {
-                request(app).post('/api/verify-email').send({ verificationJWT }).then((res) => {
+                request(app).post('/api/verify-email').send({ emailVerificationToken }).then((res) => {
                     expect(res.status).to.equal(200)
                     done()
                 }).catch((err) => done(err))
             })
             it('With an invalid key', function (done) {
-                request(app).post('/api/verify-email').send({ verificationJWT: verificationJWT + 'x' }).then((res) => {
+                request(app).post('/api/verify-email').send({ emailVerificationToken: emailVerificationToken + 'x' }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_VERIFICATION_KEY' })
                     done()

@@ -30,6 +30,8 @@ The second approach is more complex as it requries the server to know where the 
 
 For now, the second path has been taken, with the client assumed to be located in the same domain as the server, taken from req.headers.host. It may be better to switch to the first approach.
 
+Similar issue for password reset: client URL is inferred from req.headers.host (which may not reliably exist if mobile clients may be used), and email directs user to that client URL.
+
 # Other Notes
 
 

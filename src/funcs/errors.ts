@@ -78,6 +78,10 @@ class StandardError {
                 this.errorCode = 'IS_CURRENT_EMAIL'
                 this.message = 'That is your current email'
                 break;
+            case 14:
+                this.httpCode = 400
+                this.errorCode = 'INVALID_PASSWORD_RESET_KEY'
+                this.message = 'Password reset key is invalid'
             default:
                 this.httpCode = 400
                 this.errorCode = 'GENERAL_ERROR'
