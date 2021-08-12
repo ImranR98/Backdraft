@@ -13,7 +13,7 @@ export class MeController extends Controller {
         return new authService().logins(req.user._id)
     }
 
-    @Delete('revoke-login')
+    @Delete('logins')
     public async revokeLogin(
         @BodyProp('tokenId') tokenId: string,
         @Request() req: any
@@ -21,7 +21,7 @@ export class MeController extends Controller {
         await new authService().revokeRefreshToken(tokenId, req.user._id)
     }
 
-    @Post('change-password')
+    @Post('password')
     public async changePassword(
         @BodyProp() password: string,
         @BodyProp() newPassword: string,
@@ -32,7 +32,7 @@ export class MeController extends Controller {
         return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens, req.ip, userAgent)
     }
 
-    @Post('change-email')
+    @Post('email')
     public async changeEmail(
         @BodyProp() password: string,
         @BodyProp() email: string,

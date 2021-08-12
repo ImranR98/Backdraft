@@ -35,7 +35,7 @@ export class authService {
                 if (existingEmailUser.verified)
                     throw new PresentableError(12)
                 else
-                    await deleteUserByID(existingEmailUser._id)
+                    await deleteUserByID(existingEmailUser._id.toString())
             }
         }
     }
@@ -90,7 +90,7 @@ export class authService {
         if (!data.id || !data.email) throw new PresentableError(9)
         const user = await findUserById(data.id)
         if (!user) throw new PresentableError(9)
-        await updateUserEmail(user._id, data.email, true)
+        await updateUserEmail(user._id.toString(), data.email, true)
     }
 
     public async login(email: string, password: string, ip: string, userAgent: string) {
@@ -100,14 +100,14 @@ export class authService {
         const auth = await bcrypt.compare(password, user.password)
         if (!auth) throw new PresentableError(2)
         if (user.pendingVerification) if (user.pendingVerification.email === email) throw new PresentableError(11)
-        const refreshToken = await this.assignNewRefreshToken(user._id, ip, userAgent)
+        const refreshToken = await this.assignNewRefreshToken(user._id.toString(), ip, userAgent)
         return { token: createJWT({ _id: user._id.toString() }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES), refreshToken }
     }
 
     public async token(refreshToken: string, ip: string, userAgent: string) {
         const user = await findUserByRefreshToken(refreshToken)
         if (!user) throw new PresentableError(4)
-        await updateUserRefreshToken(user._id, refreshToken, ip, userAgent)
+        await updateUserRefreshToken(user._id.toString(), refreshToken, ip, userAgent)
         return { token: createJWT({ _id: user._id.toString() }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES) }
     }
 
@@ -117,7 +117,7 @@ export class authService {
         const RTs: IRefreshToken[] = user.refreshTokens
         const logins: Omit<IRefreshToken, 'refreshToken'>[] = []
         for (let i = 0; i < RTs.length; i++) {
-            logins.push({ _id: RTs[i]._id, ip: RTs[i].ip, userAgent: RTs[i].userAgent, date: RTs[i].date })
+            logins.push({ _id: RTs[i]._id.toString(), ip: RTs[i].ip, userAgent: RTs[i].userAgent, date: RTs[i].date })
         }
         return logins
     }
@@ -140,7 +140,7 @@ export class authService {
     public async beginPasswordReset(email: string, hostUrl: string) {
         const user = await findUserByEmail(email)
         if (!user) throw new PresentableError(5)
-        const passwordToken = createJWT({ userId: user._id }, user.password, process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES)
+        const passwordToken = createJWT({ userId: user._id.toString() }, user.password, process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES)
         const link = `${hostUrl}/reset-password/${passwordToken}`
         await sendEmail(email, 'Password Reset Link',
             `To verify this email, go to ${link}. This will expire in ${process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES} minutes.`,
@@ -158,7 +158,7 @@ export class authService {
             const user = await findUserById(data.userId)
             if (!user) throw null
             verifyAndDecodeJWT(passwordResetToken, user.password)
-            userId = user._id
+            userId = user._id.toString()
         } catch (err) {
             throw new PresentableError(14)
         }

@@ -8,7 +8,7 @@
     "start": "NODE_ENV=production node dist/app.js",
     "dev": "NODE_ENV=development nodemon -w 'src/**/*.ts' --ignore src/routes/ -x 'tsoa spec-and-routes && ts-node' src/server.ts",
     "build": "tsoa spec-and-routes && tsc",
-    "test": "NODE_ENV=test mocha --exit --require ts-node/register --require test/hooks.ts test/*.test.ts"
+    "test": "tsoa spec-and-routes && NODE_ENV=test mocha --exit --require ts-node/register --require test/hooks.ts test/*.test.ts"
   },
   "keywords": [],
   "author": "",

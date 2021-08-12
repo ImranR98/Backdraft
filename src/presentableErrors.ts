@@ -15,12 +15,12 @@ class PresentableError extends Error {
         this.data = data
         switch (errorNum) {
             case 1:
-                this.httpCode = 400
+                this.httpCode = 400 // TODO: CLEAN
                 this.code = 'INVALID_ARGUMENTS'
                 this.message = 'One or more arguments are missing or invalid'
                 break;
             case 2:
-                this.httpCode = 401
+                this.httpCode = 400
                 this.code = 'INVALID_LOGIN'
                 this.message = 'Email or password is invalid'
                 break;
@@ -45,12 +45,12 @@ class PresentableError extends Error {
                 this.message = 'Specified item was not found'
                 break;
             case 7:
-                this.httpCode = 401
+                this.httpCode = 400
                 this.code = 'WRONG_PASSWORD'
                 this.message = 'Password is incorrect'
                 break;
             case 8:
-                this.httpCode = 401
+                this.httpCode = 400
                 this.code = 'INVALID_PASSWORD'
                 this.message = 'Password does not fulfill requirements'
                 break;
@@ -139,7 +139,7 @@ const getMessageForValidationError = (err: any) => {
 const getPresentableError = (err: any) => {
     if (err instanceof PresentableError) return err
     if (process.env.NODE_ENV === 'development') logger.error(err)
-    //if (process.env.NODE_ENV === 'test') logger.verbose(err) // Uncomment if needed during testing
+    if (process.env.NODE_ENV === 'test') logger.verbose(err) // Uncomment if needed during testing
 
     const error = new PresentableError()
     if (typeof err === 'string') error.message = err
@@ -148,6 +148,7 @@ const getPresentableError = (err: any) => {
 
     const validationErrorMessage = getMessageForValidationError(err)
     if (validationErrorMessage) {
+        error.httpCode = 422
         error.code = 'VALIDATION_ERROR'
         error.message = validationErrorMessage
     }
@@ -160,7 +161,7 @@ const getPresentableError = (err: any) => {
     }
 
     if (err instanceof Error) error.message = err.message
-
+    if (process.env.NODE_ENV === 'test') logger.verbose(error) // Uncomment if needed during testing
     return error
 }
 

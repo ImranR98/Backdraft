@@ -41,14 +41,14 @@ describe('Authentication related API tests', function () {
             })
             it('With an invalid email', function (done) {
                 request(app).post('/api/signup').send({ email: 'whoops', password }).then((res) => {
-                    expect(res.status).to.equal(400)
+                    expect(res.status).to.equal(422)
                     expect(res.body).to.contain({ code: 'VALIDATION_ERROR' })
                     done()
                 }).catch((err) => done(err))
             })
             it('With an invalid password', function (done) {
                 request(app).post('/api/signup').send({ email, password: '123' }).then((res) => {
-                    expect(res.status).to.equal(401)
+                    expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
                     done()
                 }).catch((err) => done(err))
@@ -80,7 +80,7 @@ describe('Authentication related API tests', function () {
             this.timeout('50000')
             it('With a valid email', function (done) {
                 request(app).post('/api/request-password-reset').send({ email }).then((res) => {
-                    expect(res.status).to.equal(200)
+                    expect(res.status).to.equal(204)
                     done()
                 }).catch((err) => done(err))
             })
@@ -112,7 +112,7 @@ describe('Authentication related API tests', function () {
         describe('Verify email for the existing unverified user', function () {
             it('With a valid key', function (done) {
                 request(app).post('/api/verify-email').send({ emailVerificationToken: userData.emailVerificationToken }).then((res) => {
-                    expect(res.status).to.equal(200)
+                    expect(res.status).to.equal(204)
                     done()
                 }).catch((err) => done(err))
             })
@@ -203,7 +203,7 @@ describe('Authentication related API tests', function () {
 
         describe('Get refresh tokens', function () {
             it('Get refresh tokens', function (done) {
-                request(app).get('/api/me/refreshTokens').set('Authorization', `Bearer ${userData.token}`).then((res) => {
+                request(app).get('/api/me/logins').set('Authorization', `Bearer ${userData.token}`).then((res) => {
                     expect(res.status).to.equal(200)
                     expect(res.body).to.be.an('array').of.length.greaterThanOrEqual(1)
                     expect(res.body[0]).to.have.property('_id')
@@ -217,13 +217,13 @@ describe('Authentication related API tests', function () {
 
         describe('Revoke refresh tokens', function () {
             it('With a valid tokenId', function (done) {
-                request(app).delete('/api/me/refreshTokens').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0]._id }).then((res) => {
+                request(app).delete('/api/me/logins').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0]._id }).then((res) => {
                     expect(res.status).to.equal(200)
                     done()
                 }).catch((err) => done(err))
             })
             it('With an invalid tokenId', function (done) {
-                request(app).delete('/api/refreshTokens').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0]._id + 'x' }).then((res) => {
+                request(app).delete('/api/me/logins').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0]._id + 'x' }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'GENERAL_ERROR' })
                     done()
@@ -231,7 +231,7 @@ describe('Authentication related API tests', function () {
             })
             it('With a nonexistent tokenId', function (done) {
                 let replacementTokenId = userData.user.refreshTokens[0]._id.toString().slice(0, -1) + (userData.user.refreshTokens[0]._id.toString().slice(-1) === '1' ? '2' : '1')
-                request(app).delete('/api/refreshTokens').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: replacementTokenId }).then((res) => {
+                request(app).delete('/api/me/logins').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: replacementTokenId }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'MISSING_ITEM' })
                     done()
