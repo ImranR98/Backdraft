@@ -9,7 +9,7 @@ const connectDB = async () => {
     if (process.env.NODE_ENV === 'test')
         await mongoose.connect((await MongoMemoryServer.create()).getUri(), { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
     else
-        await mongoose.connect(<string>process.env.DB_CONN_STRING, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+        await mongoose.connect(process.env.DB_CONN_STRING, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
 }
 
 // Manual DB disconnect

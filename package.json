@@ -7,7 +7,7 @@
     "start": "tsc && NODE_ENV=production node dist/main.js",
     "dev": "NODE_ENV=development nodemon -w 'src/**/*.ts' -x 'ts-node' src/main.ts",
     "build": "npm test && tsc",
-    "test": "mocha --exit --require ts-node/register --require test/hooks.ts test/*.test.ts"
+    "test": "NODE_ENV=test mocha --exit --require ts-node/register --require test/hooks.ts test/*.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +21,7 @@
     "mongoose": "^5.12.12",
     "morgan": "^1.10.0",
     "nodemailer": "^6.6.3",
+    "tsoa": "^3.9.0",
     "validator": "^13.6.0",
     "winston": "^3.3.3"
   },

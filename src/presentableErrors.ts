@@ -1,91 +1,92 @@
-// Error standardization code
+// Error standardization for return to client
 
 import { MongoError } from 'mongodb'
+import { ValidateError } from 'tsoa'
 import logger from './logger'
 
 // Define a standard error object that can be sent to client
-class StandardError {
+class PresentableError extends Error {
     httpCode: number
-    errorCode: string
-    message: string
+    code: string
     data: any
 
     constructor(errorNum: number = 0, data: any = undefined) {
+        super()
         this.data = data
         switch (errorNum) {
             case 1:
                 this.httpCode = 400
-                this.errorCode = 'INVALID_ARGUMENTS'
+                this.code = 'INVALID_ARGUMENTS'
                 this.message = 'One or more arguments are missing or invalid'
                 break;
             case 2:
                 this.httpCode = 401
-                this.errorCode = 'INVALID_LOGIN'
+                this.code = 'INVALID_LOGIN'
                 this.message = 'Email or password is invalid'
                 break;
             case 3:
                 this.httpCode = 401
-                this.errorCode = 'INVALID_TOKEN'
+                this.code = 'INVALID_TOKEN'
                 this.message = 'Authorization token is invalid'
                 break;
             case 4:
                 this.httpCode = 401
-                this.errorCode = 'INVALID_REFRESH_TOKEN'
+                this.code = 'INVALID_REFRESH_TOKEN'
                 this.message = 'Refresh token is invalid'
                 break;
             case 5:
                 this.httpCode = 400
-                this.errorCode = 'MISSING_USER'
+                this.code = 'MISSING_USER'
                 this.message = 'Specified user was not found'
                 break;
             case 6:
                 this.httpCode = 400
-                this.errorCode = 'MISSING_ITEM'
+                this.code = 'MISSING_ITEM'
                 this.message = 'Specified item was not found'
                 break;
             case 7:
                 this.httpCode = 401
-                this.errorCode = 'WRONG_PASSWORD'
+                this.code = 'WRONG_PASSWORD'
                 this.message = 'Password is incorrect'
                 break;
             case 8:
                 this.httpCode = 401
-                this.errorCode = 'INVALID_PASSWORD'
+                this.code = 'INVALID_PASSWORD'
                 this.message = 'Password does not fulfill requirements'
                 break;
             case 9:
                 this.httpCode = 400
-                this.errorCode = 'INVALID_EMAIL_VERIFICATION_TOKEN'
+                this.code = 'INVALID_EMAIL_VERIFICATION_TOKEN'
                 this.message = 'Email verification key is invalid'
                 break;
             case 10:
                 this.httpCode = 400
-                this.errorCode = 'USER_ALREADY_VERIFIED'
+                this.code = 'USER_ALREADY_VERIFIED'
                 this.message = 'You are already verified'
                 break;
             case 11:
                 this.httpCode = 400
-                this.errorCode = 'USER_NOT_VERIFIED'
+                this.code = 'USER_NOT_VERIFIED'
                 this.message = 'You must verify your email first'
                 break;
             case 12:
                 this.httpCode = 400
-                this.errorCode = 'EMAIL_IN_USE'
+                this.code = 'EMAIL_IN_USE'
                 this.message = 'That email is already in use'
                 break;
             case 13:
                 this.httpCode = 400
-                this.errorCode = 'IS_CURRENT_EMAIL'
+                this.code = 'IS_CURRENT_EMAIL'
                 this.message = 'That is your current email'
                 break;
             case 14:
                 this.httpCode = 400
-                this.errorCode = 'INVALID_PASSWORD_RESET_TOKEN'
+                this.code = 'INVALID_PASSWORD_RESET_TOKEN'
                 this.message = 'Password reset key is invalid'
                 break;
             default:
-                this.httpCode = 400
-                this.errorCode = 'GENERAL_ERROR'
+                this.httpCode = 500
+                this.code = 'GENERAL_ERROR'
                 this.message = 'Something went wrong'
                 break;
         }
@@ -94,7 +95,7 @@ class StandardError {
 }
 
 // Check if a given object is a standard error
-const isStandardError = (err: any): err is StandardError => {
+const isPresentableError = (err: any): err is PresentableError => {
     if (typeof err !== 'object') return false
     const keys = Object.keys(err)
     if (!(
@@ -135,19 +136,32 @@ const getMessageForValidationError = (err: any) => {
 }
 
 // Converts any input into a standard error as best as possible
-const standardizeError = (err: any) => {
-    if (err instanceof StandardError) return err
+const getPresentableError = (err: any) => {
+    if (err instanceof PresentableError) return err
     if (process.env.NODE_ENV === 'development') logger.error(err)
     //if (process.env.NODE_ENV === 'test') logger.verbose(err) // Uncomment if needed during testing
-    const error = new StandardError()
+
+    const error = new PresentableError()
     if (typeof err === 'string') error.message = err
+
     if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)
+
     const validationErrorMessage = getMessageForValidationError(err)
     if (validationErrorMessage) {
-        error.errorCode = 'VALIDATION_ERROR'
+        error.code = 'VALIDATION_ERROR'
         error.message = validationErrorMessage
     }
+
+    if (err instanceof ValidateError) {
+        error.httpCode = 422
+        error.code = 'VALIDATION_ERROR'
+        error.message = 'Validation failed'
+        error.data = err.fields
+    }
+
+    if (err instanceof Error) error.message = err.message
+
     return error
 }
 
-export { StandardError, standardizeError }
+export { PresentableError, getPresentableError }

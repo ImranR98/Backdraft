@@ -1,7 +1,7 @@
-// Functions related to sending emails
+// Functions to send emails
 
 import nodemailer from 'nodemailer'
-import logger from './logger'
+import logger from '../logger'
 
 // Creates a nodemailer transport or test transport
 const createTransport = async () => {
@@ -18,7 +18,7 @@ const createTransport = async () => {
             }
         })
     } else {
-        return nodemailer.createTransport(JSON.parse(<string>process.env.STRINGIFIED_NODEMAILER_OPTIONS_JSON))
+        return nodemailer.createTransport(process.env.NODEMAILER_OPTIONS_JSON)
     }
 }
 

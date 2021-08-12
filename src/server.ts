@@ -1,14 +1,12 @@
 // Main Express server
 
-import { app } from './funcs/express'
+import { app } from './app'
 import { connectDB } from './db/dbConnection'
-import { ensureEnvVars } from './funcs/other'
-import { createTransport } from './funcs/emailer'
-import logger from './funcs/logger'
+import { createTransport } from './helpers/emailHelpers'
+import logger from './logger'
 
-// Verify the environment variables, DB connection, and email configuration, then start the server
+// Verify the DB connection and email configuration, then start the server
 const startServer = async () => {
-    ensureEnvVars()
     await connectDB()
     await (await createTransport()).verify()
     app.listen(process.env.PORT || 8080, () => logger.info(`Express server launched (port ${process.env.PORT || 8080})`))
