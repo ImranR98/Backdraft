@@ -12,7 +12,7 @@ export class RootController extends Controller {
         @BodyProp() email: string,
         @BodyProp() password: string,
         @Header('host') hostUrl: string
-    ) {
+    ): Promise<void> {
         this.setStatus(201)
         await new authService().signup(email, password, hostUrl)
     }
@@ -20,7 +20,7 @@ export class RootController extends Controller {
     @Post('verify-email')
     public async verifyEmail(
         @BodyProp() emailVerificationToken: string
-    ) {
+    ): Promise<void> {
         await new authService().verifyEmail(emailVerificationToken)
     }
 
@@ -30,7 +30,7 @@ export class RootController extends Controller {
         @BodyProp() password: string,
         @Request() req: express.Request,
         @Header('user-agent') userAgent: string = ''
-    ) {
+    ): Promise<{ token: string, refreshToken: string }> {
         return await new authService().login(email, password, req.ip, userAgent)
     }
 
@@ -39,7 +39,7 @@ export class RootController extends Controller {
         @BodyProp() refreshToken: string,
         @Request() req: express.Request,
         @Header('user-agent') userAgent: string = ''
-    ) {
+    ): Promise<{ token: string }> {
         return await new authService().token(refreshToken, req.ip, userAgent)
     }
 
@@ -47,7 +47,7 @@ export class RootController extends Controller {
     public async requestPasswordReset(
         @BodyProp() email: string,
         @Header('host') hostUrl: string
-    ) {
+    ): Promise<void> {
         await new authService().beginPasswordReset(email, hostUrl)
     }
 
@@ -55,7 +55,7 @@ export class RootController extends Controller {
     public async resetPassword(
         @BodyProp() passwordResetToken: string,
         @BodyProp() password: string
-    ) {
+    ): Promise<void> {
         await new authService().resetPassword(passwordResetToken, password)
     }
 

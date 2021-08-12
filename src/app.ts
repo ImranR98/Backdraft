@@ -1,6 +1,8 @@
 // Express server app configuration
 
-ensureEnvVars() // This must be above imports
+// Import and prepare env. vars. before anything else
+import { ensureEnvVars } from './environment'
+ensureEnvVars() 
 
 // Module imports
 import express from 'express'
@@ -8,8 +10,8 @@ import { getPresentableError } from './presentableErrors'
 import helmet from 'helmet'
 import logger from './logger'
 import morgan from 'morgan'
-import { RegisterRoutes } from '../build/routes'
-import { ensureEnvVars } from './environment'
+import { RegisterRoutes } from './routes/routes'
+
 
 // Prepare Express app and configure middleware
 const app: express.Application = express()

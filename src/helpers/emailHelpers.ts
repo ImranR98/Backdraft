@@ -18,7 +18,7 @@ const createTransport = async () => {
             }
         })
     } else {
-        return nodemailer.createTransport(process.env.NODEMAILER_OPTIONS_JSON)
+        return nodemailer.createTransport(JSON.parse(process.env.STRINGIFIED_NODEMAILER_OPTIONS_JSON))
     }
 }
 

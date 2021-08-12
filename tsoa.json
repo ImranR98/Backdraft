@@ -1,11 +1,10 @@
 {
     "entryFile": "src/app.ts",
-    "noImplicitAdditionalProperties": "throw-on-extras",
     "controllerPathGlobs": [
-        "src/**/*Controller.ts"
+        "src/controllers/**/*Controller.ts"
     ],
     "spec": {
-        "outputDirectory": "build",
+        "outputDirectory": "src/routes",
         "specVersion": 3,
         "securityDefinitions": {
             "access_token": {
@@ -15,7 +14,8 @@
         }
     },
     "routes": {
-        "routesDir": "build",
+        "routesDir": "src/routes",
+        "authenticationModule": "src/authentication.ts",
         "basePath": "/api"
     }
 }
