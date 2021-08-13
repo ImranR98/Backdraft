@@ -7,9 +7,7 @@ import { app } from '../src/app'
 
 import { addUserRefreshToken, findUserById } from '../src/db/User'
 
-import { password, email, createTestUser } from './testData'
-
-const clientVerificationURL = `http://localhost:${process.env.PORT || 8080}/verify`
+import { password, email, createTestUser, clientVerificationURL } from './testData'
 
 describe('root / tests', function () {
     describe('When the DB is empty', function () {
@@ -66,7 +64,7 @@ describe('root / tests', function () {
                     done()
                 }).catch((err) => done(err))
             })
-            it('With an invalid email', function (done) {
+            it('With a non existent user email', function (done) {
                 request(app).post('/api/request-password-reset').send({ email: 'x' + email, clientVerificationURL }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'MISSING_USER' })
@@ -130,29 +128,7 @@ describe('root / tests', function () {
         })
 
         describe('/login POST', function () {
-            it('With valid credentials', function (done) {
-                request(app).post('/api/login').send({ email, password }).then((res) => {
-                    expect(res.status).to.equal(200)
-                    expect(res.body).to.have.property('token')
-                    expect(res.body).to.have.property('refreshToken')
-                    done()
-                }).catch((err) => done(err))
-            })
-            it('With a nonexistent email', function (done) {
-                request(app).post('/api/login').send({ email: 'ghost@example.com', password }).then((res) => {
-                    expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
-                    done()
-                }).catch((err) => done(err))
-            })
-            it('With an incorrect password', function (done) {
-                request(app).post('/api/login').send({ email, password: password + 'x' }).then((res) => {
-                    expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
-                    done()
-                }).catch((err) => done(err))
-            })
-            it('Refresh token cleanup policy (during login)', function (done) {
+            it('With valid credentials (also tests refresh token cleanup policy)', function (done) {
                 (async () => {
                     const refreshTokenCount = async () => ((await findUserById(userData.user._id)).refreshTokens).length
                     await addUserRefreshToken(userData.user._id, userData.refreshToken + 'w', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_1_DAYS))
@@ -160,9 +136,25 @@ describe('root / tests', function () {
                     await addUserRefreshToken(userData.user._id, userData.refreshToken + 'y', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_2_DAYS))
                     await addUserRefreshToken(userData.user._id, userData.refreshToken + 'z', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_2_DAYS))
                     if (await refreshTokenCount() !== 4) throw null
-                    await request(app).post('/api/login').send({ email, password })
+                    const res = await request(app).post('/api/login').send({ email, password })
+                    expect(res.body).to.have.property('token')
+                    expect(res.body).to.have.property('refreshToken')
                     if (await refreshTokenCount() !== 2) throw null
                 })().then(() => done()).catch(err => done(err))
+            })
+            it('With a non existent user email', function (done) {
+                request(app).post('/api/login').send({ email: 'ghost@example.com', password }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
+                    done()
+                }).catch((err) => done(err))
+            })
+            it('With a wrong password', function (done) {
+                request(app).post('/api/login').send({ email, password: password + 'x' }).then((res) => {
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
+                    done()
+                }).catch((err) => done(err))
             })
         })
 

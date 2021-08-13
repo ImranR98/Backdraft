@@ -137,30 +137,32 @@ const getMessageForValidationError = (err: any) => {
 
 // Converts any input into a standard error as best as possible
 export const getPresentableError = (err: any) => {
+    let error = new PresentableError()
+
+    if (err instanceof PresentableError) error = err
+    else {
+        if (typeof err === 'string') error.message = err
+        if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)
+        const validationErrorMessage = getMessageForValidationError(err)
+        if (validationErrorMessage) {
+            error.httpCode = 422
+            error.code = 'VALIDATION_ERROR'
+            error.message = validationErrorMessage
+        }
+        if (err instanceof ValidateError) {
+            error.httpCode = 422
+            error.code = 'VALIDATION_ERROR'
+            error.message = 'Validation failed'
+            error.data = err.fields
+        }
+        if (err instanceof Error) error.message = err.message
+    }
+
     if (process.env.NODE_ENV === 'development') logger.error(err)
-    if (process.env.NODE_ENV === 'test') logger.verbose(err) // Uncomment if needed during testing
+    // if (process.env.NODE_ENV === 'test') { // Uncomment when needed
+    //     logger.verbose(JSON.stringify(err))
+    //     logger.verbose(error)
+    // }
 
-    if (err instanceof PresentableError) return err
-    
-    const error = new PresentableError()
-    if (typeof err === 'string') error.message = err
-
-    if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)
-
-    const validationErrorMessage = getMessageForValidationError(err)
-    if (validationErrorMessage) {
-        error.httpCode = 422
-        error.code = 'VALIDATION_ERROR'
-        error.message = validationErrorMessage
-    }
-
-    if (err instanceof ValidateError) {
-        error.httpCode = 422
-        error.code = 'VALIDATION_ERROR'
-        error.message = 'Validation failed'
-        error.data = err.fields
-    }
-
-    if (err instanceof Error) error.message = err.message
     return error
 }

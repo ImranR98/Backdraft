@@ -15,7 +15,7 @@ export class MeController extends Controller {
 
     @Delete('logins')
     public async revokeLogin(
-        @BodyProp('tokenId') tokenId: string,
+        @Body() { tokenId }: { tokenId: string },
         @Request() req: any
     ): Promise<void> {
         await new authService().revokeRefreshToken(tokenId, req.user._id)
@@ -23,22 +23,18 @@ export class MeController extends Controller {
 
     @Post('password')
     public async changePassword(
-        @BodyProp() password: string,
-        @BodyProp() newPassword: string,
-        @BodyProp() revokeRefreshTokens: boolean,
+        @Body() { password, newPassword, revokeRefreshTokens }: { password: string, newPassword: string, revokeRefreshTokens?: boolean },
         @Request() req: express.Request,
-        @Header('user-agent') userAgent: string = ''
+        @Header('user-agent') userAgent: string = '',
     ): Promise<{ refreshToken: string } | void> {
-        return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens, req.ip, userAgent)
+        return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent)
     }
 
     @Post('email')
     public async changeEmail(
-        @BodyProp() password: string,
-        @BodyProp() email: string,
-        @Request() req: express.Request,
-        @Header('client-url') hostUrl: string
+        @Body() { password, email, clientVerificationURL }: { password: string, email: string, clientVerificationURL: string },
+        @Request() req: express.Request
     ): Promise<void> {
-        await new authService().changeEmail((<any>req).user._id, password, email, hostUrl)
+        await new authService().changeEmail((<any>req).user._id, password, email, clientVerificationURL)
     }
 }

@@ -6,6 +6,8 @@ export const email = 'person@example.com'
 export const password = 'zoom4321'
 export const hashedPassword = '$2b$10$k6boteiv7zGy7IhnsKOUlOUS4BgUWompJO.AGLUKnkrtKQm/zBIZu'
 
+export const clientVerificationURL = `http://localhost:${process.env.PORT || 8080}/verify`
+
 export const createTestUser = async (email: string, verified: boolean = true) => {
     let user = await createUser(email, hashedPassword, verified)
     const emailVerificationToken = createJWT({ _id: user._id, email: user.email }, process.env.JWT_EMAIL_VERIFICATION_KEY, process.env.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES)
