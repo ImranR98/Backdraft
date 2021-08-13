@@ -6,6 +6,7 @@
     "spec": {
         "outputDirectory": "src/routes",
         "specVersion": 3,
+        "basePath": "/api",
         "securityDefinitions": {
             "access_token": {
                 "type": "http",
@@ -15,7 +16,7 @@
     },
     "routes": {
         "routesDir": "src/routes",
-        "authenticationModule": "src/authentication.ts",
-        "basePath": "/api"
+        "basePath": "/api",
+        "authenticationModule": "src/authentication.ts"
     }
 }

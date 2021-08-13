@@ -2,13 +2,12 @@
 - [x] Create User and RefreshToken interfaces.
 - [x] ~~Separate authController into authService and meService, based on notes in the ***Route Changes*** section below.~~ Modify existing authController into authService.
 - [x] Create authController and meController for routes.
-- [ ] Ensure `tsoa.json` and `tsconfig.json` are properly set up to make everything work.
-- Next steps:
-    - [x] Where does the error handling fit in now? Does `tsoa` have friendlier errors? Default ones are not suitable for clients. Figure this out and implement.
-    - [ ] Use `swagger-ui-express` to generate API documentation/demo webpage. Add to build script too (maybe served under just `/api` somehow? So as to avoid conflict with possible actual client served from root `/`).
-    - [ ] Figure out how to run everything in dev with auto reloading, `nodemon` style.
-    - [ ] Update and run tests to ensure everything works.
-    - [ ] Update notes and README accordingly, and merge PR.
+- [x] Ensure `tsoa.json` and `tsconfig.json` are properly set up to make everything work.
+- [x] Where does the error handling fit in now? Does `tsoa` have friendlier errors? Default ones are not suitable for clients. Figure this out and implement.
+- [x] Use `swagger-ui-express` to generate API documentation/demo webpage. Add to build script too (maybe served under just `/api` somehow? So as to avoid conflict with possible actual client served from root `/`).
+- [x] Figure out how to run everything in dev with auto reloading, `nodemon` style.
+- [x] Update and run tests to ensure everything works.
+- [ ] Update notes and README accordingly, and merge PR.
 
 # Route Changes
 These first 6 remain the same; they are not "RESTful" as I can't think of how that would work.

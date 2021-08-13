@@ -34,10 +34,9 @@ export class RootController extends Controller {
     @Post('token')
     public async token(
         @Body() { refreshToken }: { refreshToken: string },
-        @Request() req: express.Request,
-        @Header('user-agent') userAgent: string = ''
+        @Request() req: express.Request
     ): Promise<{ token: string }> {
-        return await new authService().token(refreshToken, req.ip, userAgent)
+        return await new authService().token(refreshToken, req.ip, req.headers['user-agent'] || 'unknown')
     }
 
     @Post('request-password-reset')

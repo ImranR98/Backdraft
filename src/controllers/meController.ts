@@ -25,9 +25,8 @@ export class MeController extends Controller {
     public async changePassword(
         @Body() { password, newPassword, revokeRefreshTokens }: { password: string, newPassword: string, revokeRefreshTokens?: boolean },
         @Request() req: express.Request,
-        @Header('user-agent') userAgent: string = '',
     ): Promise<{ refreshToken: string } | void> {
-        return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent)
+        return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens || false, req.ip, req.headers['user-agent'] || 'unknown')
     }
 
     @Post('email')
