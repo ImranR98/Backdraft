@@ -4,7 +4,7 @@ import { ensureEnvVars } from '../src/environment'
 import { connectDB, disconnectDB } from '../src/db/dbConnection'
 import { RootHookObject } from 'mocha'
 
-const mochaHooks: RootHookObject = {
+export const mochaHooks: RootHookObject = {
     beforeAll: function (done: Function) {
         ensureEnvVars()
         done()
@@ -18,5 +18,3 @@ const mochaHooks: RootHookObject = {
         }).catch(err => done(err))
     }
 }
-
-export { mochaHooks }

@@ -5,7 +5,7 @@ import { ValidateError } from 'tsoa'
 import logger from './logger'
 
 // Define a standard error object that can be sent to client
-class PresentableError extends Error {
+export class PresentableError extends Error {
     httpCode: number
     code: string
     data: any
@@ -136,11 +136,12 @@ const getMessageForValidationError = (err: any) => {
 }
 
 // Converts any input into a standard error as best as possible
-const getPresentableError = (err: any) => {
-    if (err instanceof PresentableError) return err
+export const getPresentableError = (err: any) => {
     if (process.env.NODE_ENV === 'development') logger.error(err)
     if (process.env.NODE_ENV === 'test') logger.verbose(err) // Uncomment if needed during testing
 
+    if (err instanceof PresentableError) return err
+    
     const error = new PresentableError()
     if (typeof err === 'string') error.message = err
 
@@ -161,8 +162,5 @@ const getPresentableError = (err: any) => {
     }
 
     if (err instanceof Error) error.message = err.message
-    if (process.env.NODE_ENV === 'test') logger.verbose(error) // Uncomment if needed during testing
     return error
 }
-
-export { PresentableError, getPresentableError }

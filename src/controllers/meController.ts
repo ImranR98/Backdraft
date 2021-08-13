@@ -37,7 +37,7 @@ export class MeController extends Controller {
         @BodyProp() password: string,
         @BodyProp() email: string,
         @Request() req: express.Request,
-        @Header('host') hostUrl: string
+        @Header('client-url') hostUrl: string
     ): Promise<void> {
         await new authService().changeEmail((<any>req).user._id, password, email, hostUrl)
     }

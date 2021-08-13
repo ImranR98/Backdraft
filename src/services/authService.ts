@@ -61,8 +61,6 @@ export class authService {
         }
     }
 
-
-
     public async signup(email: string, password: string, hostUrl: string) {
         await this.prepareForEmailVerification(email)
         const user = await createUser(email, await this.checkAndHashPassword(password))

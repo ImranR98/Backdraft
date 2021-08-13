@@ -9,25 +9,22 @@ export class RootController extends Controller {
     @SuccessResponse('201', 'Created')
     @Post('signup')
     public async signup(
-        @BodyProp() email: string,
-        @BodyProp() password: string,
-        @Header('host') hostUrl: string
+        @Body() { email, password, clientVerificationURL }: { email: string, password: string, clientVerificationURL: string },
     ): Promise<void> {
         this.setStatus(201)
-        await new authService().signup(email, password, hostUrl)
+        await new authService().signup(email, password, clientVerificationURL)
     }
 
     @Post('verify-email')
     public async verifyEmail(
-        @BodyProp() emailVerificationToken: string
+        @Body() { emailVerificationToken }: { emailVerificationToken: string }
     ): Promise<void> {
         await new authService().verifyEmail(emailVerificationToken)
     }
 
     @Post('login')
     public async login(
-        @BodyProp() email: string,
-        @BodyProp() password: string,
+        @Body() { email, password }: { email: string, password: string },
         @Request() req: express.Request,
         @Header('user-agent') userAgent: string = ''
     ): Promise<{ token: string, refreshToken: string }> {
@@ -36,7 +33,7 @@ export class RootController extends Controller {
 
     @Post('token')
     public async token(
-        @BodyProp() refreshToken: string,
+        @Body() { refreshToken }: { refreshToken: string },
         @Request() req: express.Request,
         @Header('user-agent') userAgent: string = ''
     ): Promise<{ token: string }> {
@@ -45,16 +42,14 @@ export class RootController extends Controller {
 
     @Post('request-password-reset')
     public async requestPasswordReset(
-        @BodyProp() email: string,
-        @Header('host') hostUrl: string
+        @Body() { email, clientVerificationURL }: { email: string, clientVerificationURL: string },
     ): Promise<void> {
-        await new authService().beginPasswordReset(email, hostUrl)
+        await new authService().beginPasswordReset(email, clientVerificationURL)
     }
 
     @Post('reset-password')
     public async resetPassword(
-        @BodyProp() passwordResetToken: string,
-        @BodyProp() password: string
+        @Body() { passwordResetToken, password }: { passwordResetToken: string, password: string },
     ): Promise<void> {
         await new authService().resetPassword(passwordResetToken, password)
     }
