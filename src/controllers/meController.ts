@@ -1,11 +1,12 @@
 // src/users/usersController.ts
 import express from 'express'
-import { Body, BodyProp, Controller, Delete, Get, Header, Path, Post, Query, Request, Route, Security, SuccessResponse } from 'tsoa'
+import { Body, BodyProp, Controller, Delete, Get, Header, Path, Post, Query, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
 import { IRefreshToken } from '../interfaces/IRefreshToken'
 import { authService } from '../services/authService'
 
 @Security("access_token")
 @Route('/me')
+@Response(422, 'Validation failed')
 export class MeController extends Controller {
 
     @Get('logins')
@@ -25,8 +26,9 @@ export class MeController extends Controller {
     public async changePassword(
         @Body() { password, newPassword, revokeRefreshTokens }: { password: string, newPassword: string, revokeRefreshTokens?: boolean },
         @Request() req: express.Request,
+        @Header('user-agent') userAgent?: string
     ): Promise<{ refreshToken: string } | void> {
-        return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens || false, req.ip, req.headers['user-agent'] || 'unknown')
+        return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent || '')
     }
 
     @Post('email')
