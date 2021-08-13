@@ -11,7 +11,7 @@ import { password, email, createTestUser } from './testData'
 
 const clientVerificationURL = `http://localhost:${process.env.PORT || 8080}/verify`
 
-describe('rootRoutes tests', function () {
+describe('root / tests', function () {
     describe('When the DB is empty', function () {
         describe('/signup POST', function () {
             this.timeout('50000')

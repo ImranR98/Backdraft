@@ -41,7 +41,7 @@ export class authService {
     }
 
     private async beginEmailVerification(userId: string, email: string, hostUrl: string) {
-        const verificationToken = createJWT({ id: userId, email }, process.env.JWT_EMAIL_VERIFICATION_KEY, process.env.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES)
+        const verificationToken = createJWT({ _id: userId, email }, process.env.JWT_EMAIL_VERIFICATION_KEY, process.env.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES)
         await updateUserEmail(userId, email, false)
         const link = `${hostUrl}/verify-email/${verificationToken}`
         await sendEmail(email, 'Email Verification Link',
@@ -85,8 +85,8 @@ export class authService {
         } catch (err) {
             throw new PresentableError(9)
         }
-        if (!data.id || !data.email) throw new PresentableError(9)
-        const user = await findUserById(data.id)
+        if (!data._id || !data.email) throw new PresentableError(9)
+        const user = await findUserById(data._id)
         if (!user) throw new PresentableError(9)
         await updateUserEmail(user._id.toString(), data.email, true)
     }

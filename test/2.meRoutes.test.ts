@@ -7,7 +7,7 @@ import { app } from '../src/app'
 
 import { password, email, createTestUser } from './testData'
 
-describe('meRoutes tests', function () {
+describe('/me tests', function () {
 
     let userData: any = null
 
@@ -26,7 +26,7 @@ describe('meRoutes tests', function () {
                 expect(res.body[0]).to.have.property('_id')
                 expect(res.body[0]).to.have.property('ip')
                 expect(res.body[0]).to.have.property('userAgent')
-                expect(res.body[0]).to.have.property('lastUsed')
+                expect(res.body[0]).to.have.property('date')
                 done()
             }).catch((err) => done(err))
         })
