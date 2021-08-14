@@ -9,7 +9,7 @@ import { authService } from '../services/authService'
 @Response<ClientErrorInterface>('5XX', 'Server Error')
 export class RootController extends Controller {
 
-    @SuccessResponse('201', 'Sent verification email')
+    @SuccessResponse('201', 'Verification email sent')
     @Post('signup')
     public async signup(
         @Body() { email, password, clientVerificationURL }: { email: string, password: string, clientVerificationURL: string },
@@ -18,6 +18,7 @@ export class RootController extends Controller {
         await new authService().signup(email, password, clientVerificationURL)
     }
 
+    @SuccessResponse('204', 'Email verified')
     @Post('verify-email')
     public async verifyEmail(
         @Body() { emailVerificationToken }: { emailVerificationToken: string }
@@ -43,6 +44,7 @@ export class RootController extends Controller {
         return await new authService().token(refreshToken, req.ip, userAgent || '')
     }
 
+    @SuccessResponse('204', 'Reset email sent')
     @Post('request-password-reset')
     public async requestPasswordReset(
         @Body() { email, clientVerificationURL }: { email: string, clientVerificationURL: string },
@@ -50,6 +52,7 @@ export class RootController extends Controller {
         await new authService().beginPasswordReset(email, clientVerificationURL)
     }
 
+    @SuccessResponse('204', 'Password changed')
     @Post('reset-password')
     public async resetPassword(
         @Body() { passwordResetToken, password }: { passwordResetToken: string, password: string },

@@ -1,6 +1,6 @@
 // src/users/usersController.ts
 import express from 'express'
-import { Body, Controller, Delete, Get, Header, Post, Request, Response, Route, Security } from 'tsoa'
+import { Body, Controller, Delete, Get, Header, Post, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
 import { ClientErrorInterface } from '../interfaces/ClientErrorInterface'
 import { ClientRefreshTokenInterface } from '../interfaces/ClientRefreshTokenInterface'
 import { authService } from '../services/authService'
@@ -16,6 +16,7 @@ export class MeController extends Controller {
         return new authService().logins(req.user._id)
     }
 
+    @SuccessResponse('204', 'Login revoked')
     @Delete('logins')
     public async revokeLogin(
         @Body() { tokenId }: { tokenId: string },
@@ -33,6 +34,7 @@ export class MeController extends Controller {
         return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent || '')
     }
 
+    @SuccessResponse('204', 'Verification email sent')
     @Post('email')
     public async changeEmail(
         @Body() { password, email, clientVerificationURL }: { password: string, email: string, clientVerificationURL: string },
