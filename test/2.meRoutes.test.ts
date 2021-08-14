@@ -42,7 +42,7 @@ describe('/me tests', function () {
         it('With a wrong tokenId', function (done) {
             request(app).delete('/api/me/logins').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0]._id + 'x' }).then((res) => {
                 expect(res.status).to.equal(500)
-                expect(res.body).to.contain({ code: 'GENERAL_ERROR' })
+                expect(res.body).to.contain({ code: 'SERVER_ERROR' })
                 done()
             }).catch((err) => done(err))
         })
@@ -50,7 +50,7 @@ describe('/me tests', function () {
             let replacementTokenId = userData.user.refreshTokens[0]._id.toString().slice(0, -1) + (userData.user.refreshTokens[0]._id.toString().slice(-1) === '1' ? '2' : '1')
             request(app).delete('/api/me/logins').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: replacementTokenId }).then((res) => {
                 expect(res.status).to.equal(400)
-                expect(res.body).to.contain({ code: 'MISSING_ITEM' })
+                expect(res.body).to.contain({ code: 'ITEM_NOT_FOUND' })
                 done()
             }).catch((err) => done(err))
         })
@@ -111,7 +111,7 @@ describe('/me tests', function () {
         it('With the current password and the current email', function (done) {
             request(app).post('/api/me/email').set('Authorization', `Bearer ${userData.token}`).send({ password, email, clientVerificationURL }).then((res) => {
                 expect(res.status).to.equal(400)
-                expect(res.body).to.contain({ code: 'IS_CURRENT_EMAIL' })
+                expect(res.body).to.contain({ code: 'EMAIL_ALREADY_SET' })
                 done()
             }).catch((err) => done(err))
         })

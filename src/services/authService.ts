@@ -1,18 +1,17 @@
 import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, deleteUserByID, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateUserRefreshToken, removeUserRefreshToken } from '../db/User'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import { PresentableError } from '../presentableErrors'
+import { PresentableError } from './clientErrorService'
 import { sendEmail } from '../helpers/emailHelpers'
 import { createJWT, decodeJWT, verifyAndDecodeJWT } from '../helpers/jwtHelpers'
 
-import { IUser } from "../interfaces/IUser"
-import { IRefreshToken } from '../interfaces/IRefreshToken'
+import { ClientRefreshTokenInterface } from '../interfaces/ClientRefreshTokenInterface'
 
 export class authService {
     private isPasswordValid = (password: string) => password.length >= 6
 
     private async checkAndHashPassword(password: string) {
-        if (!this.isPasswordValid(password)) throw new PresentableError(8)
+        if (!this.isPasswordValid(password)) throw new PresentableError('INVALID_PASSWORD')
         const salt = await bcrypt.genSalt()
         return await bcrypt.hash(password, salt)
     }
@@ -30,10 +29,10 @@ export class authService {
         if (existingEmailUser) {
             if (userId === existingEmailUser._id.toString()) {
                 if (existingEmailUser.verified)
-                    throw new PresentableError(10)
+                    throw new PresentableError('ALREADY_VERIFIED')
             } else {
                 if (existingEmailUser.verified)
-                    throw new PresentableError(12)
+                    throw new PresentableError('EMAIL_IN_USE')
                 else
                     await deleteUserByID(existingEmailUser._id.toString())
             }
@@ -52,15 +51,6 @@ export class authService {
         )
     }
 
-    public get(email: string, password: string): Omit<IUser, '_id'> {
-        return {
-            email,
-            password,
-            verified: false,
-            refreshTokens: []
-        }
-    }
-
     public async signup(email: string, password: string, hostUrl: string) {
         await this.prepareForEmailVerification(email)
         const user = await createUser(email, await this.checkAndHashPassword(password))
@@ -70,10 +60,10 @@ export class authService {
     public async changeEmail(userId: string, password: string, newEmail: string, hostUrl: string) {
         newEmail = newEmail.trim()
         const user = await findUserById(userId)
-        if (!user) throw new PresentableError(5)
+        if (!user) throw new PresentableError('USER_NOT_FOUND')
         const auth = await bcrypt.compare(password, user.password)
-        if (!auth) throw new PresentableError(7)
-        if (user.email === newEmail.toLowerCase().trim()) throw new PresentableError(13)
+        if (!auth) throw new PresentableError('WRONG_PASSWORD')
+        if (user.email === newEmail.toLowerCase().trim()) throw new PresentableError('EMAIL_ALREADY_SET')
         await this.prepareForEmailVerification(newEmail, userId)
         await this.beginEmailVerification(userId, newEmail, hostUrl)
     }
@@ -83,37 +73,37 @@ export class authService {
         try {
             data = verifyAndDecodeJWT(emailVerificationToken, process.env.JWT_EMAIL_VERIFICATION_KEY)
         } catch (err) {
-            throw new PresentableError(9)
+            throw new PresentableError('INVALID_TOKEN')
         }
-        if (!data._id || !data.email) throw new PresentableError(9)
+        if (!data._id || !data.email) throw new PresentableError('INVALID_TOKEN')
         const user = await findUserById(data._id)
-        if (!user) throw new PresentableError(9)
+        if (!user) throw new PresentableError('INVALID_TOKEN')
         await updateUserEmail(user._id.toString(), data.email, true)
     }
 
     public async login(email: string, password: string, ip: string, userAgent: string) {
         email = email.trim()
         const user = await findUserByEmail(email)
-        if (!user) throw new PresentableError(2)
+        if (!user) throw new PresentableError('INVALID_LOGIN')
         const auth = await bcrypt.compare(password, user.password)
-        if (!auth) throw new PresentableError(2)
-        if (user.pendingVerification) if (user.pendingVerification.email === email) throw new PresentableError(11)
+        if (!auth) throw new PresentableError('INVALID_LOGIN')
+        if (user.pendingVerification) if (user.pendingVerification.email === email) throw new PresentableError('NOT_VERIFIED')
         const refreshToken = await this.assignNewRefreshToken(user._id.toString(), ip, userAgent)
         return { token: createJWT({ _id: user._id.toString() }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES), refreshToken }
     }
 
     public async token(refreshToken: string, ip: string, userAgent: string) {
         const user = await findUserByRefreshToken(refreshToken)
-        if (!user) throw new PresentableError(4)
+        if (!user) throw new PresentableError('INVALID_AUTH_TOKEN')
         await updateUserRefreshToken(user._id.toString(), refreshToken, ip, userAgent)
         return { token: createJWT({ _id: user._id.toString() }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES) }
     }
 
     public async logins(userId: string) {
         const user = await findUserById(userId)
-        if (!user) throw new PresentableError(5)
-        const RTs: IRefreshToken[] = user.refreshTokens
-        const logins: Omit<IRefreshToken, 'refreshToken'>[] = []
+        if (!user) throw new PresentableError('USER_NOT_FOUND')
+        const RTs: ClientRefreshTokenInterface[] = user.refreshTokens
+        const logins: ClientRefreshTokenInterface[] = []
         for (let i = 0; i < RTs.length; i++) {
             logins.push({ _id: RTs[i]._id.toString(), ip: RTs[i].ip, userAgent: RTs[i].userAgent, date: RTs[i].date })
         }
@@ -121,14 +111,14 @@ export class authService {
     }
 
     public async revokeRefreshToken(tokenId: string, userId: string) {
-        if (!await removeUserRefreshToken(userId, tokenId)) throw new PresentableError(6)
+        if (!await removeUserRefreshToken(userId, tokenId)) throw new PresentableError('ITEM_NOT_FOUND')
     }
 
     public async changePassword(userId: string, password: string, newPassword: string, revokeRefreshTokens: boolean, ip: string, userAgent: string) {
         const user = await findUserById(userId)
-        if (!user) throw new PresentableError(5)
+        if (!user) throw new PresentableError('USER_NOT_FOUND')
         const auth = await bcrypt.compare(password, user.password)
-        if (!auth) throw new PresentableError(7)
+        if (!auth) throw new PresentableError('WRONG_PASSWORD')
         let changes: any = { password: await this.checkAndHashPassword(newPassword) }
         if (revokeRefreshTokens) changes.refreshTokens = []
         await updateUser(userId, changes)
@@ -137,7 +127,7 @@ export class authService {
 
     public async beginPasswordReset(email: string, hostUrl: string) {
         const user = await findUserByEmail(email)
-        if (!user) throw new PresentableError(5)
+        if (!user) throw new PresentableError('USER_NOT_FOUND')
         const passwordToken = createJWT({ userId: user._id.toString() }, user.password, process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES)
         const link = `${hostUrl}/reset-password/${passwordToken}`
         await sendEmail(email, 'Password Reset Link',
@@ -158,7 +148,7 @@ export class authService {
             verifyAndDecodeJWT(passwordResetToken, user.password)
             userId = user._id.toString()
         } catch (err) {
-            throw new PresentableError(14)
+            throw new PresentableError('INVALID_TOKEN')
         }
         await updateUser(userId, { password: await this.checkAndHashPassword(newPassword), verified: true })
     }

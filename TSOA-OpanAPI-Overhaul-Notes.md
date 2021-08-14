@@ -7,7 +7,7 @@
 - [x] Use `swagger-ui-express` to generate API documentation/demo webpage. Add to build script too (maybe served under just `/api` somehow? So as to avoid conflict with possible actual client served from root `/`).
 - [x] Figure out how to run everything in dev with auto reloading, `nodemon` style.
 - [x] Update and run tests to ensure everything works.
-- [ ] Add custom @Response decorators to each controller to document the errors in presentableErrors.ts.
+- [x] Add custom @Response decorators to each controller to document custom errors.
 - [ ] Add JSDoc descriptions above every controller to document the functionality and parameters.
 - [ ] Update notes and README accordingly, and merge PR.
 

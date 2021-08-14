@@ -67,39 +67,39 @@ describe('root / tests', function () {
             it('With a non existent user email', function (done) {
                 request(app).post('/api/request-password-reset').send({ email: 'x' + email, clientVerificationURL }).then((res) => {
                     expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'MISSING_USER' })
+                    expect(res.body).to.contain({ code: 'USER_NOT_FOUND' })
                     done()
                 }).catch((err) => done(err))
             })
         })
 
         describe('/reset-password POST', function () {
-            it('With a valid key', function (done) {
+            it('With a valid token', function (done) {
                 request(app).post('/api/reset-password').send({ passwordResetToken: userData.passwordResetToken, password: password + 'x' }).then((res) => {
                     expect(res.status).to.equal(204)
                     done()
                 }).catch((err) => done(err))
             })
-            it('With an invalid key', function (done) {
+            it('With an invalid token', function (done) {
                 request(app).post('/api/reset-password').send({ passwordResetToken: userData.passwordResetToken + 'x', password: password + 'x' }).then((res) => {
                     expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'INVALID_PASSWORD_RESET_TOKEN' })
+                    expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                     done()
                 }).catch((err) => done(err))
             })
         })
 
         describe('/verify-email POST', function () {
-            it('With a valid key', function (done) {
+            it('With a valid token', function (done) {
                 request(app).post('/api/verify-email').send({ emailVerificationToken: userData.emailVerificationToken }).then((res) => {
                     expect(res.status).to.equal(204)
                     done()
                 }).catch((err) => done(err))
             })
-            it('With an invalid key', function (done) {
+            it('With an invalid token', function (done) {
                 request(app).post('/api/verify-email').send({ emailVerificationToken: userData.emailVerificationToken + 'x' }).then((res) => {
                     expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'INVALID_EMAIL_VERIFICATION_TOKEN' })
+                    expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                     done()
                 }).catch((err) => done(err))
             })
@@ -169,7 +169,7 @@ describe('root / tests', function () {
             it('With an invalid refresh token', function (done) {
                 request(app).post('/api/token').send({ refreshToken: userData.refreshToken + 'x' }).then((res) => {
                     expect(res.status).to.equal(401)
-                    expect(res.body).to.contain({ code: 'INVALID_REFRESH_TOKEN' })
+                    expect(res.body).to.contain({ code: 'INVALID_AUTH_TOKEN' })
                     done()
                 }).catch((err) => done(err))
             })

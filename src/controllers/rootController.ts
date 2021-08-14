@@ -1,10 +1,12 @@
 // src/users/usersController.ts
 import express from 'express'
 import { Body, Controller, Header, Post, Request, Response, Route, SuccessResponse } from 'tsoa'
+import { ClientErrorInterface } from '../interfaces/ClientErrorInterface'
 import { authService } from '../services/authService'
 
 @Route('/')
-@Response(422, 'Validation failed')
+@Response<ClientErrorInterface>('4XX', 'User Error')
+@Response<ClientErrorInterface>('5XX', 'Server Error')
 export class RootController extends Controller {
 
     @SuccessResponse('201', 'Sent verification email')

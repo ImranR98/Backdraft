@@ -6,7 +6,7 @@ ensureEnvVars()
 
 // Module imports
 import express from 'express'
-import { getPresentableError } from './presentableErrors'
+import { getPresentableError } from './services/clientErrorService'
 import helmet from 'helmet'
 import logger from './logger'
 import morgan from 'morgan'
@@ -30,7 +30,7 @@ RegisterRoutes(app)
 // Standardize any error before sending to the client
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     const error = getPresentableError(err)
-    res.status(error.httpCode).send({ code: error.code, message: error.message, data: error.data })
+    res.status(error.httpCode).send({ code: error.code, message: error.message, details: error.details })
 })
 
 // Export app and connectDB for test suite to use

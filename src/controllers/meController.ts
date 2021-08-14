@@ -1,16 +1,18 @@
 // src/users/usersController.ts
 import express from 'express'
-import { Body, BodyProp, Controller, Delete, Get, Header, Path, Post, Query, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
-import { IRefreshToken } from '../interfaces/IRefreshToken'
+import { Body, Controller, Delete, Get, Header, Post, Request, Response, Route, Security } from 'tsoa'
+import { ClientErrorInterface } from '../interfaces/ClientErrorInterface'
+import { ClientRefreshTokenInterface } from '../interfaces/ClientRefreshTokenInterface'
 import { authService } from '../services/authService'
 
 @Security("access_token")
 @Route('/me')
-@Response(422, 'Validation failed')
+@Response<ClientErrorInterface>('4XX', 'User Error')
+@Response<ClientErrorInterface>('5XX', 'Server Error')
 export class MeController extends Controller {
 
     @Get('logins')
-    public async logins(@Request() req: any): Promise<Omit<IRefreshToken, 'refreshToken'>[]> {
+    public async logins(@Request() req: any): Promise<ClientRefreshTokenInterface[]> {
         return new authService().logins(req.user._id)
     }
 

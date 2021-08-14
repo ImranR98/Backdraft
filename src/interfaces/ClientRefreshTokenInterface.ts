@@ -1,6 +1,5 @@
-export interface IRefreshToken {
+export interface ClientRefreshTokenInterface {
     _id: string,
-    refreshToken: string;
     ip: string;
     userAgent?: string;
     date: Date;
