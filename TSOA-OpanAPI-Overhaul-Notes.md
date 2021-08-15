@@ -8,7 +8,7 @@
 - [x] Figure out how to run everything in dev with auto reloading, `nodemon` style.
 - [x] Update and run tests to ensure everything works.
 - [x] Add custom @Response decorators to each controller to document custom errors.
-- [ ] Add JSDoc descriptions above every controller to document the functionality and parameters.
+- [x] Add JSDoc descriptions above every controller to document the functionality and parameters.
 - [ ] Update notes and README accordingly, and merge PR.
 
 # Route Changes
