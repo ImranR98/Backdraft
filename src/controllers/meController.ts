@@ -1,9 +1,9 @@
-// src/users/usersController.ts
 import express from 'express'
-import { Body, Controller, Delete, Get, Header, Post, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
+import { Body, Controller, Delete, Get, Header, Path, Post, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
 import { ClientErrorInterface } from '../interfaces/ClientErrorInterface'
-import { ClientRefreshTokenInterface } from '../interfaces/ClientRefreshTokenInterface'
+import { ClientUserInterface } from '../interfaces/ClientUserInterface'
 import { authService } from '../services/authService'
+import { userService } from '../services/userService'
 
 @Security("access_token")
 @Route('/me')
@@ -11,20 +11,19 @@ import { authService } from '../services/authService'
 @Response<ClientErrorInterface>('5XX', 'Server Error')
 export class MeController extends Controller {
 
-    /** Get a list of information about the refresh tokens ("logins") attached to the authenticated user's account. Does not return the actual tokens. */
-    @Get('logins')
-    public async logins(@Request() req: any): Promise<ClientRefreshTokenInterface[]> {
-        return new authService().logins(req.user._id)
+    /** Get account information for the authenticated user, including a list of info about each refresh token ("login") attached to their account. Does not return the actual refresh tokens. */
+    @Get()
+    public async me(@Request() req: any): Promise<ClientUserInterface> {
+        return new userService().me(req.user._id)
     }
 
-    /** Delete a refresh token ("login") attached to the authenticated user's account. */
+    /** Delete a refresh token ("login") attached to the authenticated user's account.
+     * @param tokenId The refresh token ID
+    */
     @SuccessResponse('204', 'Login revoked')
-    @Delete('logins')
+    @Delete('logins/{tokenId}')
     public async revokeLogin(
-        @Body() { tokenId }: {
-            /** The refresh token ID */
-            tokenId: string
-        },
+        @Path() tokenId: string,
         @Request() req: any
     ): Promise<void> {
         await new authService().revokeRefreshToken(tokenId, req.user._id)

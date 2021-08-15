@@ -21,8 +21,8 @@ These first 6 remain the same; they are not "RESTful" as I can't think of how th
 - `/api/reset-password`
 
 Once, the user is logged in, though, we can start thinking in terms of "everything is a resource" and have a more "RESTful" system of routes
-- NEW - `/api/me` GET - Can be implemented later; returns basic user info
-- `/api/logins` => `/api/me/refreshtokens` GET
-- `/api/revoke-login` => `/api/me/refreshtokens/{id}` DELETE
+- NEW - `/api/me` GET
+- `/api/logins` => `/api/me/logins`
+- `/api/revoke-login` => `/api/me/logins/{id}` DELETE
 - `/api/change-password` => `/api/me/password` POST
 - `/api/change-email` => `/api/me/email` POST

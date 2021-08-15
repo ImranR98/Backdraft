@@ -1,4 +1,4 @@
-// Winston logger configuration 
+// Winston logger 
 
 import winston from 'winston'
 

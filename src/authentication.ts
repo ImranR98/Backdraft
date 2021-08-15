@@ -1,4 +1,3 @@
-// authMiddleware.ts
 // Provides authentication middleware to tsoa
 
 import express from 'express'

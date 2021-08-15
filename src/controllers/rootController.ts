@@ -1,4 +1,3 @@
-// src/users/usersController.ts
 import express from 'express'
 import { Body, Controller, Header, Post, Request, Response, Route, SuccessResponse } from 'tsoa'
 import { ClientErrorInterface } from '../interfaces/ClientErrorInterface'
@@ -63,7 +62,7 @@ export class RootController extends Controller {
         @Request() req: express.Request,
         @Header('user-agent') userAgent?: string
     ): Promise<{ token: string }> {
-        return await new authService().token(refreshToken, req.ip, userAgent || '')
+        return await new authService().getAccessToken(refreshToken, req.ip, userAgent || '')
     }
 
     /** Generate a password reset token for a user, and send them a reset email. */

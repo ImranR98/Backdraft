@@ -1,11 +1,11 @@
+// Provides functions related to authentication, and any user-related functions that have to do with credentials (email and password)
+
 import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, deleteUserByID, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateUserRefreshToken, removeUserRefreshToken } from '../db/User'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { PresentableError } from './clientErrorService'
 import { sendEmail } from '../helpers/emailHelpers'
 import { createJWT, decodeJWT, verifyAndDecodeJWT } from '../helpers/jwtHelpers'
-
-import { ClientRefreshTokenInterface } from '../interfaces/ClientRefreshTokenInterface'
 
 export class authService {
     private isPasswordValid = (password: string) => password.length >= 6
@@ -92,22 +92,11 @@ export class authService {
         return { token: createJWT({ _id: user._id.toString() }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES), refreshToken }
     }
 
-    public async token(refreshToken: string, ip: string, userAgent: string) {
+    public async getAccessToken(refreshToken: string, ip: string, userAgent: string) {
         const user = await findUserByRefreshToken(refreshToken)
         if (!user) throw new PresentableError('INVALID_AUTH_TOKEN')
         await updateUserRefreshToken(user._id.toString(), refreshToken, ip, userAgent)
         return { token: createJWT({ _id: user._id.toString() }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES) }
-    }
-
-    public async logins(userId: string) {
-        const user = await findUserById(userId)
-        if (!user) throw new PresentableError('USER_NOT_FOUND')
-        const RTs: ClientRefreshTokenInterface[] = user.refreshTokens
-        const logins: ClientRefreshTokenInterface[] = []
-        for (let i = 0; i < RTs.length; i++) {
-            logins.push({ _id: RTs[i]._id.toString(), ip: RTs[i].ip, userAgent: RTs[i].userAgent, date: RTs[i].date })
-        }
-        return logins
     }
 
     public async revokeRefreshToken(tokenId: string, userId: string) {

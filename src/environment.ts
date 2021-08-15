@@ -1,5 +1,5 @@
 // Environment variable validation and parsing
-// Be sure to import and run ensureEnvVars() at the earliest possible point in the app execution
+// ensureEnvVars() should be run at the earliest possible point in app execution
 
 import dotenv from 'dotenv'
 
