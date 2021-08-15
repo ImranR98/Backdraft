@@ -1,0 +1,23 @@
+{
+    "entryFile": "src/app.ts",
+    "noImplicitAdditionalProperties": "silently-remove-extras",
+    "controllerPathGlobs": [
+        "src/controllers/**/*Controller.ts"
+    ],
+    "spec": {
+        "outputDirectory": "src/routes",
+        "specVersion": 3,
+        "basePath": "/api",
+        "securityDefinitions": {
+            "access_token": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "routes": {
+        "routesDir": "src/routes",
+        "basePath": "/api",
+        "authenticationModule": "src/authentication.ts"
+    }
+}

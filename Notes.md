@@ -1,10 +1,3 @@
-# Ideas
-
-- Email verification on signup.
-- 'Forgot password' function. This would build on the email verification feature.
-
-
-
 # Concerns
 
 
@@ -28,9 +21,9 @@ With the first approach, there is less coupling with the client; you don't even 
 
 The second approach is more complex as it requries the server to know where the client is in order to send a link to that client to the user. What happens when there is more than one possible client? Or when there are mobile clients that have no domain (maybe deep links could be used)?
 
-For now, the second path has been taken, with the client assumed to be located in the same domain as the server, taken from req.headers.host. It may be better to switch to the first approach.
+For now, the second path has been taken, with the client having to provide its own verification URL in the request body.
 
-Similar issue for password reset: client URL is inferred from req.headers.host (which may not reliably exist if mobile clients may be used), and email directs user to that client URL.
+Similar issue for password reset.
 
 # Other Notes
 

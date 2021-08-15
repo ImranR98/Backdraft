@@ -17,6 +17,7 @@ This project helps avoid such issues by providing a solid foundation that includ
 
 - User authentication using JWT and refresh tokens.
 - Ability for authenticated users to manage their credentials and refresh tokens.
+- Auto generated OpenAPI spec and Swagger UI endpoint using tsoa and Swagger-UI-Express.
 - Automated testing for all API endpoints using Mocha, Chai, SuperTest, and mongodb-memory-server.
 - Standardized logging using Winston and Morgan.
 - Mongoose and TypeScript used for easier database querying and increased type safety.
@@ -37,68 +38,54 @@ This project helps avoid such issues by providing a solid foundation that includ
 
 Each file in the `db` directory (aside from `dbConnection.ts`) defines a model used in the database. These models are never directly exported to other files. Instead, this file also defines various query functions that are used to make changes to the database. This means that the database layer is abstracted away and can be swapped out later if needed, without changing the controllers.
 
-Note that this layer has minimal validation as this is mostly done in the controllers.
+Note that this layer has minimal validation as this is mostly done in the services.
 
 The `dbConnection.ts` file exports functions used to connect/disconnect to/from the DB, including for testing.
 
-### Controllers
+### Services
 
-Each file in the `controllers` directory contains a set of functions, each of which carries out some task related to the application's use. Such functions normally involve accepting input that was received from the client, querying or modifying the database using the functions exposed by the database layer, and returning a result.
+Each file in the `services` directory contains a set of functions, each of which carries out some task related to the application's use. Such functions normally involve accepting input that was received from the client, querying or modifying the database using the functions exposed by the database layer, and returning a result.
 
 The functions are grouped into files, called controllers, based on a shared theme or aspect of functionality. For example, all functions related to authentication are stored in `authController.ts`.
 
 Controllers contain the vast majority of application logic; anything used directly to respond to requests is generally stored in a controller.
 
-### Routes
+### Controllers
 
-Each file in the `routes` directory contains a set of Express route functions. Each of these usually ensures the request contains required data, then calls some controller function and returns the result or an error.
+Each file in the `controllers` directory contains a set of [tsoa](https://tsoa-community.github.io/docs/) controllers. They are grouped according to the route path; for example, `meControllers.ts` contains all controllers used that define routes directly under `/me`. 
 
-Like controllers (see above), these are grouped into files based on a shared theme.
+Each tsoa controller defines a request route, the expected request body and/or parameters, and the expected output. It then calls some service function and returns the result or an error. Controllers should also contain JSDoc comments to help document each route for the OpenAPI spec.
 
-### Middleware
+### Helpers
 
-Each file in the `middleware` directory defines functions that are used in the main process as [Express middleware](https://expressjs.com/en/guide/using-middleware.html).
+The `helpers` directory contains helper functions that do not fit in any other directory. Examples include email related functions and JWT encode/decode functions.
 
 ### Everything Else
 
-The `funcs` directory contains all other code (aside from `main.ts`) needed for the server to run, divided into several files according to functionality.
-
-Some of what this covers:
-- Functions to send emails
-- Functions to standardize errors for the client
-- The Express `app` (after configuring it with middleware)
-- Functions to encode and decode JSON Web Tokens
-- The Winston logger
-- Various other functions that do not fit elsewhere, such as those related to user input and environment variables
-
-### Main Process
-
-Code execution begins in `main.ts`. This file runs some checks, then starts the server.
+The remaining files in `/src` include:
+- `authentication.ts` - defines authentication functions used by tsoa to protect specific routes.
+- `environment.ts` - provides a function to ensure required environment variables exist.
+- `logger.ts` - configures the Winston logger.
+- `app.ts` - configures the Express app.
+- `server.ts` - The main server process.
 
 
 
 ## Typical Flow for Implementing New Features
 
 Implementing new functionality in the application usually involves:
-1. Creating the relevant DB model(s)
-2. Implementing the relevant controller(s) or controller function(s)
-3. Adding the necessary route(s)
-4. Making sure the route(s) are imported in `express.ts`
-5. Writing the appropriate test(s)
+1. Creating the relevant DB models
+2. Implementing the relevant services
+3. Adding the necessary controllerss
+5. Testing
 
 
 
 ## Testing
 Each `.test.ts` file in the `test` directory contains functional Mocha tests for a particular set of server endpoints. All root hook plugins are in `hooks.ts`.
 
-In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to a new, empty test database (in memory, using mongodb-memory-server). This also means that, for example, a test that requires the existence of a logged in user would need a signup and login to be done first in `before` or `beforeEach` hooks. While this does lead to repetition, it is the only way to keep tests independent.
+In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to a new, empty test database (in memory, using mongodb-memory-server). This also means that, for example, a test that requires the existence of a logged in user would need a "test" user to be created first in `before` or `beforeEach` hooks. Such commonly used "preparation" functions are kept in `testData.ts`.
 
-
-# TODO
-- Complete API overhaul using `tsoa` and `swagger-ui-express`. Benefits:
-    - Auto generated API docs in the OpenAPI format; allows for easier client development.
-    - Less "custom" and more "RESTful" API behavior.
-    - `tsoa` is type safe and includes validation; no need to do custom validation.
 
 
 ------
