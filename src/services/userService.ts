@@ -1,7 +1,7 @@
 // Provides all user-related functions except those in authService
 
 import { findUserById } from '../db/User'
-import { PresentableError } from './clientErrorService'
+import { PresentableError } from '../helpers/clientErrorHelper'
 
 import { ClientRefreshTokenInterface } from '../interfaces/ClientRefreshTokenInterface'
 import { ClientUserInterface } from '../interfaces/ClientUserInterface'

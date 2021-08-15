@@ -6,7 +6,7 @@ ensureEnvVars()
 
 // Module imports
 import express from 'express'
-import { getPresentableError } from './services/clientErrorService'
+import { getPresentableError } from './helpers/clientErrorHelper'
 import helmet from 'helmet'
 import logger from './logger'
 import morgan from 'morgan'

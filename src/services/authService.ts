@@ -3,7 +3,7 @@
 import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, deleteUserByID, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateUserRefreshToken, removeUserRefreshToken } from '../db/User'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import { PresentableError } from './clientErrorService'
+import { PresentableError } from '../helpers/clientErrorHelper'
 import { sendEmail } from '../helpers/emailHelpers'
 import { createJWT, decodeJWT, verifyAndDecodeJWT } from '../helpers/jwtHelpers'
 
