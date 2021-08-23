@@ -5,7 +5,7 @@ import logger from '../logger'
 
 // Creates a nodemailer transport or test transport
 export const createTransport = async () => {
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
         const testAccount = await nodemailer.createTestAccount()
         logger.debug(`Ethereal Email account info: User: ${testAccount.user}, Pass: ${testAccount.pass}`)
         return nodemailer.createTransport({
