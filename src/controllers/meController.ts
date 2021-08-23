@@ -1,5 +1,5 @@
 import express from 'express'
-import { Body, Controller, Delete, Get, Header, Path, Post, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
+import { Body, Controller, Delete, Get, Header, Path, Put, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
 import { ClientErrorInterface } from '../interfaces/ClientErrorInterface'
 import { ClientUserInterface } from '../interfaces/ClientUserInterface'
 import { authService } from '../services/authService'
@@ -32,7 +32,7 @@ export class MeController extends Controller {
 
     /** Change the authenticated user's password, while optionally deleting any refresh tokens ("logins") attached to their account. */
     @Response('204', 'Ok')
-    @Post('password')
+    @Put('password')
     public async changePassword(
         @Body() { password, newPassword, revokeRefreshTokens }: {
             /** The user's current password */
@@ -50,7 +50,7 @@ export class MeController extends Controller {
 
     /** Begin verification for a new email to replace the authenticated user's existing email. */
     @SuccessResponse('204', 'Verification email sent')
-    @Post('email')
+    @Put('email')
     public async changeEmail(
         @Body() { password, email, clientVerificationURL }: {
             /** The user's password */
