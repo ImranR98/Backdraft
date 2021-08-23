@@ -94,7 +94,7 @@ export class authService {
 
     public async getAccessToken(refreshToken: string, ip: string, userAgent: string) {
         const user = await findUserByRefreshToken(refreshToken)
-        if (!user) throw new PresentableError('INVALID_AUTH_TOKEN')
+        if (!user) throw new PresentableError('INVALID_REFRESH_TOKEN')
         await updateUserRefreshToken(user._id.toString(), refreshToken, ip, userAgent)
         return { token: createJWT({ _id: user._id.toString() }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES) }
     }

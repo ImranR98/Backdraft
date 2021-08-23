@@ -9,7 +9,8 @@ import logger from '../logger'
 const customErrors = {
     'SERVER_ERROR': { httpCode: 500, message: 'Internal Server Error' },
     'INVALID_LOGIN': { httpCode: 400, message: 'Email or password is invalid' },
-    'INVALID_AUTH_TOKEN': { httpCode: 401, message: 'Token is invalid' },
+    'INVALID_ACCESS_TOKEN': { httpCode: 401, message: 'Access token is invalid' },
+    'INVALID_REFRESH_TOKEN': { httpCode: 401, message: 'Refresh token is invalid' },
     'INVALID_TOKEN': { httpCode: 400, message: 'Token is invalid' },
     'USER_NOT_FOUND': { httpCode: 400, message: 'Specified user was not found' },
     'ITEM_NOT_FOUND': { httpCode: 400, message: 'Specified item was not found' },

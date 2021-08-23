@@ -169,7 +169,7 @@ describe('root / tests', function () {
             it('With an invalid refresh token', function (done) {
                 request(app).post('/api/token').send({ refreshToken: userData.refreshToken + 'x' }).then((res) => {
                     expect(res.status).to.equal(401)
-                    expect(res.body).to.contain({ code: 'INVALID_AUTH_TOKEN' })
+                    expect(res.body).to.contain({ code: 'INVALID_REFRESH_TOKEN' })
                     done()
                 }).catch((err) => done(err))
             })
