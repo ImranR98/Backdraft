@@ -7,6 +7,7 @@ import { userService } from '../services/userService'
 
 @Security("access_token")
 @Route('/me')
+@Response<ClientErrorInterface>('401', 'Invalid access or refresh token')
 @Response<ClientErrorInterface>('4XX', 'User Error')
 @Response<ClientErrorInterface>('5XX', 'Server Error')
 export class MeController extends Controller {

@@ -11,7 +11,7 @@ export const decodeJWT = (token: string) => jwt.decode(removeBearerStringFromJWT
 
 export const verifyAndDecodeJWT = (token: string, signingKey: string) => {
     try {
-        jwt.verify(removeBearerStringFromJWT(token), signingKey)
+        return jwt.verify(removeBearerStringFromJWT(token), signingKey)
     } catch (err) {
         throw new PresentableError('INVALID_ACCESS_TOKEN')
     }
