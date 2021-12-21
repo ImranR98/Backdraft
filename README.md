@@ -46,9 +46,9 @@ The `dbConnection.ts` file exports functions used to connect/disconnect to/from 
 
 Each file in the `services` directory contains a set of functions, each of which carries out some task related to the application's use. Such functions normally involve accepting input that was received from the client, querying or modifying the database using the functions exposed by the database layer, and returning a result.
 
-The functions are grouped into files, called controllers, based on a shared theme or aspect of functionality. For example, all functions related to authentication are stored in `authController.ts`.
+The functions are grouped into service files based on a shared theme or aspect of functionality. For example, all functions related to authentication are stored in `authService.ts`.
 
-Controllers contain the vast majority of application logic; anything used directly to respond to requests is generally stored in a controller.
+Services contain the vast majority of application logic; anything used directly to respond to requests is generally stored in a controller.
 
 ### Controllers
 
@@ -60,11 +60,15 @@ Each tsoa controller defines a request route, the expected request body and/or p
 
 The `helpers` directory contains helper functions that do not fit in any other directory. Examples include email related functions and JWT encode/decode functions.
 
+### Interfaces
+
+The `interfaces` directory contains TypeScript interfaces that are used in Service files. Aside from helping with type safety, these are also used by tsoa to generate a more well-defined OpenAPI spec.
+
 ### Everything Else
 
 The remaining files in `/src` include:
 - `authentication.ts` - defines authentication functions used by tsoa to protect specific routes.
-- `environment.ts` - provides a function to ensure required environment variables exist.
+- `environment.ts` - provides a function to ensure the required environment variables exist at runtime.
 - `logger.ts` - configures the Winston logger.
 - `app.ts` - configures the Express app.
 - `server.ts` - The main server process.
@@ -75,8 +79,9 @@ The remaining files in `/src` include:
 
 Implementing new functionality in the application usually involves:
 1. Creating the relevant DB models
-2. Implementing the relevant services
-3. Adding the necessary controllerss
+2. Implementing the relevant services (and interfaces if needed)
+3. Adding the relevant controllers
+4. Implementing fuctional tests for the new endpoints
 5. Testing
 
 
