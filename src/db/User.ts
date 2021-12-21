@@ -60,5 +60,5 @@ export const updateUserRefreshToken = async (userId: string, refreshToken: strin
 )
 export const removeUserRefreshToken = async (userId: string, tokenId: string) => {
   const result = await User.updateOne({ _id: userId }, { $pull: { refreshTokens: { _id: tokenId } } }, { runValidators: true })
-  return !!result.nModified
+  return !!result.modifiedCount
 }
