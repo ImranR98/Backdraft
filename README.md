@@ -30,6 +30,7 @@ This project helps avoid such issues by providing a solid foundation that includ
 2. Create a copy of `template.env`, rename it to `.env`, and fill in the appropriate details as described in that file. Refer to the `dotenv` [documentation](https://www.npmjs.com/package/dotenv) for details on how this works. Alternatively, set up environment variables some other way.
 3. Test the project, build it for production, or run it in a development environment using the scripts defined in `package.json`.
 
+By default, all endpoints are located in `/api`, and the Swagger UI endpoint is `/api/docs`.
 
 
 ## Project Structure
