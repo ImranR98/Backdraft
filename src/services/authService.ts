@@ -134,12 +134,12 @@ export class authService {
         await sendEmail(email, 'Password Reset Link',
             `To verify this email, go to ${link}. This will expire in ${process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES} minutes.`,
             `<p>Hi, thanks for signing up!</p>
-<p>Click <a href="${link}">here</a> to verify your email. The link will expire in ${process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES} minutes.</p>
+<p>Click <a href="${link}">here</a> to reset your password. The link will expire in ${process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES} minutes.</p>
 <p><small><b>If that doesn't work, paste the following link into your browser: <a href="${link}">${link}</a></b></small></p>`
         )
     }
 
-    public async resetPassword(passwordResetToken: string, newPassword: string) {
+    public async resetPassword(passwordResetToken: string, password: string) {
         let userId = ''
         try {
             let data: any = decodeJWT(passwordResetToken)
@@ -151,6 +151,6 @@ export class authService {
         } catch (err) {
             throw new PresentableError('INVALID_TOKEN')
         }
-        await updateUser(userId, { password: await this.checkAndHashPassword(newPassword), verified: true })
+        await updateUser(userId, { password: await this.checkAndHashPassword(password), verified: true })
     }
 }

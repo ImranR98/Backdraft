@@ -7,7 +7,7 @@
 Sometimes, a user may manually log out, and reasonable client software would destroy the refresh token then, or they may lose their refresh tokens in some other way. But the DB still stores that refresh token. Over time, this would lead to thousands of dead refresh tokens building up in the DB. Obviously, very old tokens should be revoked automatically. But when and how is this appropriate? Isn't the point of refresh tokens that they last forever? The current functionality is that old tokens should be revoked when a new one is requested (at login). Specifically:
 
 - All tokens that haven't been used in 30 days that came from the same IP and user agent as the latest login are revoked.
-- All tokens that haven't been used in year are revoked.
+- All tokens that haven't been used in a year are revoked.
 
 Is this the best way? Is the IP that Express receives always accurate? That may depend on, for example, proxies. What if a user has two identical user agents on the same network? In that case, would the IP received be accurate to the individual device or the network? This needs to be tested. If it is precise, is the 30 day limit needed? Why not revoke immediately? Answers unclear but this could perhaps be improved.
 
