@@ -6,6 +6,7 @@ import crypto from 'crypto'
 import { PresentableError } from '../helpers/clientErrorHelper'
 import { sendEmail } from '../helpers/emailHelpers'
 import { createJWT, decodeJWT, verifyAndDecodeJWT } from '../helpers/jwtHelpers'
+import { URL } from 'url'
 
 export class authService {
     private isPasswordValid = (password: string) => password.length >= 6
@@ -14,6 +15,14 @@ export class authService {
         if (!this.isPasswordValid(password)) throw new PresentableError('INVALID_PASSWORD')
         const salt = await bcrypt.genSalt()
         return await bcrypt.hash(password, salt)
+    }
+
+    private async ensureURL(url: string) {
+        try {
+            new URL(url)
+        } catch {
+            throw new PresentableError('VALIDATION_ERROR', 'Invalid URL')
+        }
     }
 
     private async assignNewRefreshToken(userId: string, ip: string, userAgent: string) {
@@ -42,7 +51,7 @@ export class authService {
     private async beginEmailVerification(userId: string, email: string, verificationUrl: string) {
         const verificationToken = createJWT({ _id: userId, email }, process.env.JWT_EMAIL_VERIFICATION_KEY, process.env.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES)
         await updateUserEmail(userId, email, false)
-        const link = `${verificationUrl}/${verificationToken}`
+        const link = `${verificationUrl}?emailVerificationToken=${verificationToken}`
         await sendEmail(email, 'Email Verification Link',
             `To verify this email, go to ${link}. This will expire in ${process.env.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES} minutes.`,
             `<p>Hi, thanks for signing up!</p>
@@ -52,12 +61,14 @@ export class authService {
     }
 
     public async signup(email: string, password: string, verificationUrl: string) {
+        await this.ensureURL(verificationUrl)
         await this.prepareForEmailVerification(email)
         const user = await createUser(email, await this.checkAndHashPassword(password))
         await this.beginEmailVerification(user._id.toString(), email.trim(), verificationUrl)
     }
 
     public async changeEmail(userId: string, password: string, newEmail: string, verificationUrl: string) {
+        await this.ensureURL(verificationUrl)
         newEmail = newEmail.trim()
         const user = await findUserById(userId)
         if (!user) throw new PresentableError('USER_NOT_FOUND')
@@ -115,10 +126,11 @@ export class authService {
     }
 
     public async beginPasswordReset(email: string, verificationUrl: string) {
+        await this.ensureURL(verificationUrl)
         const user = await findUserByEmail(email)
         if (!user) throw new PresentableError('USER_NOT_FOUND')
         const passwordToken = createJWT({ userId: user._id.toString() }, user.password, process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES)
-        const link = `${verificationUrl}/${passwordToken}`
+        const link = `${verificationUrl}?passwordResetToken=${passwordToken}`
         await sendEmail(email, 'Password Reset Link',
             `To verify this email, go to ${link}. This will expire in ${process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES} minutes.`,
             `<p>Hi, thanks for signing up!</p>

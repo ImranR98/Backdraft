@@ -17,7 +17,7 @@ export class RootController extends Controller {
             email: string, 
             /** The new user's password */
             password: string, 
-            /** The client application URL that the verification email will link the user to (with their email verification token) */
+            /** The client application URL that the verification email will link the user to (with their email verification token as a query param) */
             clientVerificationURL: string
         },
     ): Promise<void> {
@@ -72,7 +72,7 @@ export class RootController extends Controller {
         @Body() { email, clientVerificationURL }: {
             /** The user's email */
             email: string,
-            /** The client application URL that the reset email will link the user to (with their password reset token) */
+            /** The client application URL that the reset email will link the user to (with their password reset token as a query param) */
             clientVerificationURL: string
         },
     ): Promise<void> {
