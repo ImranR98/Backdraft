@@ -35,7 +35,7 @@ export class PresentableError extends Error implements ClientErrorInterface {
         this.code = customErrorCode
         this.httpCode = customErrors[customErrorCode].httpCode
         this.message = customErrors[customErrorCode].message
-        this,details = details
+        this.details = details
         if (process.env.NODE_ENV !== 'test') logger.debug(this)
     }
 }
@@ -47,16 +47,19 @@ const isPresentableError = (err: any): err is PresentableError => {
     if (!(
         keys.includes('httpCode') &&
         keys.includes('code') &&
-        keys.includes('message') &&
-        keys.includes('details') &&
-        keys.length === 3
+        (
+            (keys.includes('message') && keys.includes('details') && keys.length === 4) ||
+            (!keys.includes('message') && keys.includes('details') && keys.length === 3) ||
+            (keys.includes('message') && !keys.includes('details') && keys.length === 3) ||
+            (!keys.includes('message') && !keys.includes('details') && keys.length === 2)
+        )
     )) return false
     if (!(
-        typeof err['httpCode'] === 'string' &&
+        typeof err['httpCode'] === 'number' &&
         typeof err['code'] === 'string' &&
-        typeof err['message'] === 'string' &&
-        typeof err['details'] === 'string'
-    )) return false
+        (typeof err['message'] === 'string' || typeof err['message'] === 'undefined') &&
+        (typeof err['details'] === 'string' || typeof err['details'] === 'undefined')
+    )) {console.log(err); return false}
     return true
 }
 
@@ -87,7 +90,7 @@ const getMessageForValidationError = (err: any) => {
 export const getPresentableError = (err: any) => {
     let error = new PresentableError()
 
-    if (err instanceof PresentableError) error = err
+    if (isPresentableError(err)) error = err
     else {
         if (typeof err === 'string') error.message = err
         if (err instanceof MongoError) error.message = getMessageForMongoError(err, error.message)
