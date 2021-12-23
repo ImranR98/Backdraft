@@ -46,20 +46,15 @@ const isPresentableError = (err: any): err is PresentableError => {
     const keys = Object.keys(err)
     if (!(
         keys.includes('httpCode') &&
-        keys.includes('code') &&
-        (
-            (keys.includes('message') && keys.includes('details') && keys.length === 4) ||
-            (!keys.includes('message') && keys.includes('details') && keys.length === 3) ||
-            (keys.includes('message') && !keys.includes('details') && keys.length === 3) ||
-            (!keys.includes('message') && !keys.includes('details') && keys.length === 2)
-        )
+        keys.includes('code')
     )) return false
     if (!(
         typeof err['httpCode'] === 'number' &&
         typeof err['code'] === 'string' &&
+        Object.keys(customErrors).indexOf(err['code']) !== -1 &&
         (typeof err['message'] === 'string' || typeof err['message'] === 'undefined') &&
         (typeof err['details'] === 'string' || typeof err['details'] === 'undefined')
-    )) {console.log(err); return false}
+    )) return false
     return true
 }
 
