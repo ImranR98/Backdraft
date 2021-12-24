@@ -30,7 +30,7 @@ RegisterRoutes(app)
 // Standardize any error before sending to the client
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     const error = getPresentableError(err)
-    res.status(error.httpCode).send({ code: error.code, message: error.message, details: error.details })
+    res.status(error.httpCode).send({ code: error.code, message: error.message })
 })
 
 // Export app and connectDB for test suite to use
