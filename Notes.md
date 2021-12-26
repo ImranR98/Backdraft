@@ -41,3 +41,6 @@ Similar issue for password reset.
 4. If a logged in user wants, they can take a look at their refresh tokens (not the tokens themselves, but some associated data such as device or IP) and choose to revoke the token.
 5. Older tokens are automatically revoked in accordance with some policy based on token usage. Prevents buildup of 'dead' tokens in the database.
 6. User can reset their password. This optionally revokes all refresh tokens.
+
+## TODO
+- Add a `/logout` route that revokes the refresh token sent with the request, if any (if not, don't send any error since the client should delete the token from its storage anyways - this server side logout is just to avoid keeping refreshTokens stored that will not be used again).

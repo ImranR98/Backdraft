@@ -34,7 +34,6 @@ export class PresentableError extends Error implements ClientErrorInterface {
         this.code = customErrorCode
         this.httpCode = customErrors[customErrorCode].httpCode
         this.message = message || ''
-        if (process.env.NODE_ENV !== 'test') logger.debug(this)
     }
 }
 
@@ -100,7 +99,16 @@ export const getPresentableError = (err: any) => {
         if (err instanceof Error) error.message = err.message
     }
 
-    if (process.env.NODE_ENV === 'development') logger.error(err)
+    if (process.env.NODE_ENV === 'development') { // Show original error in development
+        try {
+            logger.error(JSON.stringify(err))
+        } catch (e) {
+            logger.error(err)
+        }
+    }
+    if (process.env.NODE_ENV === 'production') { // Show only client error in production
+        logger.debug(JSON.stringify(error))
+    }
     // if (process.env.NODE_ENV === 'test') { // Uncomment when needed
     //     logger.verbose(JSON.stringify(err))
     //     logger.verbose(error)
