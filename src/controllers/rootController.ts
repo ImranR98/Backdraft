@@ -1,5 +1,5 @@
 import express from 'express'
-import { Body, Controller, Header, Post, Request, Response, Route, SuccessResponse } from 'tsoa'
+import { Body, Controller, Header, Post, Request, Response, Route, SuccessResponse, Security } from 'tsoa'
 import { ClientErrorInterface } from '../interfaces/ClientErrorInterface'
 import { authService } from '../services/authService'
 
@@ -14,9 +14,9 @@ export class RootController extends Controller {
     public async signup(
         @Body() { email, password, clientVerificationURL }: {
             /** The new user's email */
-            email: string, 
+            email: string,
             /** The new user's password */
-            password: string, 
+            password: string,
             /** The client application URL that the verification email will link the user to (with their email verification token as a query param) */
             clientVerificationURL: string
         },
@@ -34,10 +34,12 @@ export class RootController extends Controller {
             emailVerificationToken: string
         }
     ): Promise<void> {
+        this.setStatus(204)
         await new authService().verifyEmail(emailVerificationToken)
     }
 
     /** Generate an access token for a user who has provided valid credentials. */
+    @SuccessResponse('200', 'New access and refresh tokens generated')
     @Post('login')
     public async login(
         @Body() { email, password }: {
@@ -49,10 +51,27 @@ export class RootController extends Controller {
         @Request() req: express.Request,
         @Header('user-agent') userAgent?: string
     ): Promise<{ token: string, refreshToken: string }> {
+        this.setStatus(200)
         return await new authService().login(email, password, req.ip, userAgent || '')
     }
 
+    /** Revoke the refresh token sent with this request (if it exists and is attached to the authenticated user's account). */
+    @Security("access_token")
+    @SuccessResponse('200', 'Logged out - refresh token revoked')
+    @Post('logout')
+    public async logout(
+        @Body() { refreshToken }: {
+            /** A valid refresh token attached to the user's account */
+            refreshToken: string
+        },
+        @Request() req: express.Request,
+    ): Promise<void> {
+        this.setStatus(200)
+        return await new authService().revokeRefreshTokenByTokenString(refreshToken, (<any>req).user._id)
+    }
+
     /** Generate a new access token for a user who has provided a valid refresh token. */
+    @SuccessResponse('200', 'New access token generated')
     @Post('token')
     public async token(
         @Body() { refreshToken }: {
@@ -62,6 +81,7 @@ export class RootController extends Controller {
         @Request() req: express.Request,
         @Header('user-agent') userAgent?: string
     ): Promise<{ token: string }> {
+        this.setStatus(200)
         return await new authService().getAccessToken(refreshToken, req.ip, userAgent || '')
     }
 
@@ -76,6 +96,7 @@ export class RootController extends Controller {
             clientVerificationURL: string
         },
     ): Promise<void> {
+        this.setStatus(204)
         await new authService().beginPasswordReset(email, clientVerificationURL)
     }
 
@@ -90,6 +111,7 @@ export class RootController extends Controller {
             password: string
         },
     ): Promise<void> {
+        this.setStatus(204)
         await new authService().resetPassword(passwordResetToken, password)
     }
 

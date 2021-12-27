@@ -5,7 +5,7 @@ import { PresentableError } from './clientErrorHelper'
 
 export const createJWT = (data: Object, signingKey: string, expiresInMinutes: number) => jwt.sign(data, signingKey, { expiresIn: expiresInMinutes * 60 })
 
-const removeBearerStringFromJWT = (token: string) => (token.indexOf('Bearer ') != 0) ? token : token.slice(7)
+export const removeBearerStringFromJWT = (token: string) => (token.indexOf('Bearer ') != 0) ? token : token.slice(7)
 
 export const decodeJWT = (token: string) => jwt.decode(removeBearerStringFromJWT(token))
 

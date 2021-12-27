@@ -58,7 +58,11 @@ export const updateUserRefreshToken = async (userId: string, refreshToken: strin
   { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } },
   { runValidators: true }
 )
-export const removeUserRefreshToken = async (userId: string, tokenId: string) => {
+export const removeUserRefreshTokenByTokenId = async (userId: string, tokenId: string) => {
   const result = await User.updateOne({ _id: userId }, { $pull: { refreshTokens: { _id: tokenId } } }, { runValidators: true })
+  return !!result.modifiedCount
+}
+export const removeUserRefreshTokenByTokenString = async (userId: string, refreshToken: string) => {
+  const result = await User.updateOne({ _id: userId }, { $pull: { refreshTokens: { refreshToken } } }, { runValidators: true })
   return !!result.modifiedCount
 }

@@ -1,6 +1,6 @@
 // Provides functions related to authentication, and any user-related functions that have to do with credentials (email and password)
 
-import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, deleteUserByID, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateUserRefreshToken, removeUserRefreshToken } from '../db/User'
+import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, deleteUserByID, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateUserRefreshToken, removeUserRefreshTokenByTokenId, removeUserRefreshTokenByTokenString } from '../db/User'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { PresentableError } from '../helpers/clientErrorHelper'
@@ -110,8 +110,12 @@ export class authService {
         return { token: createJWT({ _id: user._id.toString() }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES) }
     }
 
-    public async revokeRefreshToken(tokenId: string, userId: string) {
-        if (!await removeUserRefreshToken(userId, tokenId)) throw new PresentableError('ITEM_NOT_FOUND')
+    public async revokeRefreshTokenByTokenString(refreshToken: string, userId: string) {
+        if (!await removeUserRefreshTokenByTokenString(userId, refreshToken)) throw new PresentableError('ITEM_NOT_FOUND')
+    }
+
+    public async revokeRefreshTokenByTokenId(tokenId: string, userId: string) {
+        if (!await removeUserRefreshTokenByTokenId(userId, tokenId)) throw new PresentableError('ITEM_NOT_FOUND')
     }
 
     public async changePassword(userId: string, password: string, newPassword: string, revokeRefreshTokens: boolean, ip: string, userAgent: string) {

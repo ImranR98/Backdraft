@@ -175,6 +175,28 @@ describe('root / tests', function () {
             })
         })
 
+        describe('/logout POST', function () {
+            it('With a valid refresh token', function (done) {
+                (async () => {
+                    const refreshTokenCount = async () => ((await findUserById(userData.user._id)).refreshTokens).length
+                    let originalCount = await refreshTokenCount()
+                    const res = await request(app).post('/api/logout').set('Authorization', `Bearer ${userData.token}`).send({ refreshToken: userData.refreshToken })
+                    expect(res.status).to.equal(200)
+                    if (await refreshTokenCount() !== (originalCount - 1)) throw null
+                })().then(() => done()).catch(err => done(err))
+            })
+            it('With an invalid refresh token', function (done) {
+                (async () => {
+                    const refreshTokenCount = async () => ((await findUserById(userData.user._id)).refreshTokens).length
+                    let originalCount = await refreshTokenCount()
+                    const res = await request(app).post('/api/logout').set('Authorization', `Bearer ${userData.token}`).send({ refreshToken: userData.refreshToken + 'x' })
+                    expect(res.status).to.equal(400)
+                    expect(res.body).to.contain({ code: 'ITEM_NOT_FOUND' })
+                    if (await refreshTokenCount() !== originalCount) throw null
+                })().then(() => done()).catch(err => done(err))
+            })
+        })
+
     })
 
 })

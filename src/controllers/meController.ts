@@ -13,9 +13,10 @@ import { userService } from '../services/userService'
 export class MeController extends Controller {
 
     /** Get account information for the authenticated user, including a list of info about each refresh token ("login") attached to their account. Does not return the actual refresh tokens. */
+    @SuccessResponse('200', 'Ok')
     @Get()
-    public async me(@Request() req: any): Promise<ClientUserInterface> {
-        return new userService().me(req.user._id)
+    public async me(@Request() req: express.Request): Promise<ClientUserInterface> {
+        return await new userService().me((<any>req).user._id)
     }
 
     /** Delete a refresh token ("login") attached to the authenticated user's account.
@@ -25,13 +26,14 @@ export class MeController extends Controller {
     @Delete('logins/{tokenId}')
     public async revokeLogin(
         @Path() tokenId: string,
-        @Request() req: any
+        @Request() req: express.Request
     ): Promise<void> {
-        await new authService().revokeRefreshToken(tokenId, req.user._id)
+        this.setStatus(204)
+        await new authService().revokeRefreshTokenByTokenId(tokenId, (<any>req).user._id)
     }
 
     /** Change the authenticated user's password, while optionally deleting any refresh tokens ("logins") attached to their account. */
-    @Response('204', 'Ok')
+    @SuccessResponse('200/204', 'Password changed (and possibly, new refresh token generated while all others revoked)')
     @Put('password')
     public async changePassword(
         @Body() { password, newPassword, revokeRefreshTokens }: {
@@ -45,6 +47,7 @@ export class MeController extends Controller {
         @Request() req: express.Request,
         @Header('user-agent') userAgent?: string
     ): Promise<{ refreshToken: string } | void> {
+        this.setStatus(revokeRefreshTokens ? 200 : 204 )
         return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent || '')
     }
 
@@ -62,6 +65,7 @@ export class MeController extends Controller {
         },
         @Request() req: express.Request
     ): Promise<void> {
+        this.setStatus(204)
         await new authService().changeEmail((<any>req).user._id, password, email, clientVerificationURL)
     }
 }
