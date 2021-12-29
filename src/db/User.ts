@@ -53,8 +53,8 @@ export const removeOldUserRefreshTokens = async (userId: string, beforeDate: Dat
   if (userAgent) updateQuery.userAgent = userAgent
   return await User.updateOne({ _id: userId }, { $pull: { refreshTokens: updateQuery }, }, { runValidators: true })
 }
-export const updateUserRefreshToken = async (userId: string, refreshToken: string, ip: string, userAgent: string, date: Date = new Date()) => await User.updateOne(
-  { _id: userId, refreshTokens: { refreshToken } },
+export const updateUserRefreshToken = async (userId: string, refreshToken: string, ip: string, userAgent: string) => await User.updateOne(
+  { _id: userId, "refreshTokens.refreshToken": refreshToken },
   { $set: { "refreshTokens.$.ip": ip, "refreshTokens.$.userAgent": userAgent, "refreshTokens.$.date": new Date() } },
   { runValidators: true }
 )
