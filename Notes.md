@@ -4,12 +4,14 @@
 
 ## Refresh Token Cleanup Policy
 
-Sometimes, a user may manually log out, and reasonable client software would destroy the refresh token then, or they may lose their refresh tokens in some other way. But the DB still stores that refresh token. Over time, this would lead to thousands of dead refresh tokens building up in the DB. Obviously, very old tokens should be revoked automatically. But when and how is this appropriate? Isn't the point of refresh tokens that they last forever? The current functionality is that old tokens should be revoked when a new one is requested (at login). Specifically:
+When a user logs out, it deletes its refresh token and also sends a request to the server to destroy the server copy of that refresh token (since it won't be used again). But a log out is not the only way a user might lose a refresh token; this could also happen due to a change in browsers or devices (factory reset, loss, etc.) and when this happens the server retains its copy of the refresh token. Over time, this would lead to many 'dead' refresh tokens building up in the DB. To avoid this, refresh tokens that have not been used for a long time should be cleaned up automatically. But when and how is this appropriate? The point of refresh tokens is that they last forever, so a clean up policy would involve a trade-off between expected behaviour and practical needs.
+
+ The current functionality is that old tokens should be revoked when a new one is requested (at login). Specifically:
 
 - All tokens that haven't been used in 30 days that came from the same IP and user agent as the latest login are revoked.
 - All tokens that haven't been used in a year are revoked.
 
-Is this the best way? Is the IP that Express receives always accurate? That may depend on, for example, proxies. What if a user has two identical user agents on the same network? In that case, would the IP received be accurate to the individual device or the network? This needs to be tested. If it is precise, is the 30 day limit needed? Why not revoke immediately? Answers unclear but this could perhaps be improved.
+Is this the best way? Does it make sense to treat tokens differently based on IP and user-agent given that these change all the time (especially IP due to moving between networks and DHCP)? Is the IP that Express receives always accurate even when there are, for example, for example, proxies involved? It may be better to just stick to the 1-year policy, but for now things have been left as above.
 
 ## Email Verification - Link to Client or Server
 
@@ -41,6 +43,3 @@ Similar issue for password reset.
 4. If a logged in user wants, they can take a look at their refresh tokens (not the tokens themselves, but some associated data such as device or IP) and choose to revoke the token.
 5. Older tokens are automatically revoked in accordance with some policy based on token usage. Prevents buildup of 'dead' tokens in the database.
 6. User can reset their password. This optionally revokes all refresh tokens.
-
-## TODO
-- Add a `/logout` route that revokes the refresh token sent with the request, if any (if not, don't send any error since the client should delete the token from its storage anyways - this server side logout is just to avoid keeping refreshTokens stored that will not be used again).
