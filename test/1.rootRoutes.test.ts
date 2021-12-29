@@ -159,12 +159,16 @@ describe('root / tests', function () {
         })
 
         describe('/token POST', function () {
-            it('With a valid refresh token', function (done) {
-                request(app).post('/api/token').send({ refreshToken: userData.refreshToken }).then((res) => {
+            it('With a valid refresh token (also tests refreshToken.date update)', function (done) {
+                (async () => {
+                    const topRefreshToken = async () => ((await findUserById(userData.user._id)).refreshTokens)[0]
+                    const initialToken = await topRefreshToken()
+                    if (!initialToken) throw null
+                    const res = await request(app).post('/api/token').send({ refreshToken: userData.refreshToken })
                     expect(res.status).to.equal(200)
                     expect(res.body).to.have.property('token')
-                    done()
-                }).catch((err) => done(err))
+                    if (initialToken.date >= (await topRefreshToken())?.date) throw null
+                })().then(() => done()).catch(err => done(err))
             })
             it('With an invalid refresh token', function (done) {
                 request(app).post('/api/token').send({ refreshToken: userData.refreshToken + 'x' }).then((res) => {
