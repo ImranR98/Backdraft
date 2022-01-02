@@ -2,6 +2,7 @@
 
 Node.js, Express, and MongoDB based web server with simple user authentication, to be used as a template or starting off point for backend projects.
 
+[Frontload](https://github.com/ImranR98/Frontload) is the frontend counterpart to this project.
 
 
 ## Why
