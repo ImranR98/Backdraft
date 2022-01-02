@@ -5,7 +5,7 @@ import validator from 'validator'
 
 // Define refresh token sub-schema
 const refreshTokenSchema = new mongoose.Schema({
-  refreshToken: { type: String, required: true, unique: true },
+  refreshToken: { type: String, required: true, unique: true, sparse: true },
   ip: { type: String, required: true },
   userAgent: String,
   date: { type: Date, default: new Date() }, // For some reason setting this to required causes an error
@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password not provided'],
   },
-  refreshTokens: [refreshTokenSchema],
+  refreshTokens: [refreshTokenSchema]
 })
 
 // Define and export the model
