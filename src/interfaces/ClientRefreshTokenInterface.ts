@@ -1,5 +1,5 @@
 export interface ClientRefreshTokenInterface {
-    _id: string,
+    id: number,
     ip: string;
     userAgent?: string;
     date: Date;

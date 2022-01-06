@@ -67,7 +67,7 @@ export class RootController extends Controller {
         @Request() req: express.Request,
     ): Promise<void> {
         this.setStatus(200)
-        return await new authService().revokeRefreshTokenByTokenString(refreshToken, (<any>req).user._id)
+        return await new authService().revokeRefreshTokenByTokenString(refreshToken)
     }
 
     /** Generate a new access token for a user who has provided a valid refresh token. */

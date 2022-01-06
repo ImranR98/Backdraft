@@ -22,12 +22,12 @@ describe('/me tests', function () {
         it('Get user info', function (done) {
             request(app).get('/api/me').set('Authorization', `Bearer ${userData.token}`).then((res) => {
                 expect(res.status).to.equal(200)
-                expect(res.body).to.have.property('_id')
+                expect(res.body).to.have.property('id')
                 expect(res.body).to.have.property('email')
                 expect(res.body).to.have.property('verified')
                 expect(res.body).to.have.property('refreshTokens')
                 expect(res.body.refreshTokens).to.be.an('array').of.length.greaterThanOrEqual(1)
-                expect(res.body.refreshTokens[0]).to.have.property('_id')
+                expect(res.body.refreshTokens[0]).to.have.property('id')
                 expect(res.body.refreshTokens[0]).to.have.property('ip')
                 expect(res.body.refreshTokens[0]).to.have.property('userAgent')
                 expect(res.body.refreshTokens[0]).to.have.property('date')
@@ -38,20 +38,20 @@ describe('/me tests', function () {
 
     describe('/me/logins DELETE', function () {
         it('With a valid tokenId', function (done) {
-            request(app).delete('/api/me/logins/' + userData.user.refreshTokens[0]._id).set('Authorization', `Bearer ${userData.token}`).then((res) => {
+            request(app).delete('/api/me/logins/' + userData.user.refreshTokens[0].id).set('Authorization', `Bearer ${userData.token}`).then((res) => {
                 expect(res.status).to.equal(204)
                 done()
             }).catch((err) => done(err))
         })
         it('With a wrong tokenId', function (done) {
-            request(app).delete('/api/me/logins/' + userData.user.refreshTokens[0]._id + 'x').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0]._id + 'x' }).then((res) => {
+            request(app).delete('/api/me/logins/' + userData.user.refreshTokens[0].id + 'x').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0].id + 'x' }).then((res) => {
                 expect(res.status).to.equal(500)
                 expect(res.body).to.contain({ code: 'SERVER_ERROR' })
                 done()
             }).catch((err) => done(err))
         })
         it('With a nonexistent tokenId', function (done) {
-            let replacementTokenId = userData.user.refreshTokens[0]._id.toString().slice(0, -1) + (userData.user.refreshTokens[0]._id.toString().slice(-1) === '1' ? '2' : '1')
+            let replacementTokenId = userData.user.refreshTokens[0].id.toString().slice(0, -1) + (userData.user.refreshTokens[0].id.toString().slice(-1) === '1' ? '2' : '1')
             request(app).delete('/api/me/logins/' + replacementTokenId).set('Authorization', `Bearer ${userData.token}`).then((res) => {
                 expect(res.status).to.equal(400)
                 expect(res.body).to.contain({ code: 'ITEM_NOT_FOUND' })

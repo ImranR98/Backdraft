@@ -36,7 +36,7 @@ By default, all endpoints are located in `/api`, and the Swagger UI endpoint is 
 
 ## Project Structure
 
-### DB
+### DB - TODO: Update this
 
 Each file in the `db` directory (aside from `dbConnection.ts`) defines a model used in the database. These models are never directly exported to other files. Instead, this file also defines various query functions that are used to make changes to the database. This means that the database layer is abstracted away and can be swapped out later if needed, without changing the controllers.
 

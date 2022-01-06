@@ -1,7 +1,7 @@
 // Mocha root hook plugins for tests
 
 import { ensureEnvVars } from '../src/environment'
-import { connectDB, disconnectDB } from '../src/db/dbConnection'
+import prisma from '../src/db/prismaClient'
 import { RootHookObject } from 'mocha'
 
 export const mochaHooks: RootHookObject = {

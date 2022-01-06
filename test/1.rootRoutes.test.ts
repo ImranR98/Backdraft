@@ -130,11 +130,11 @@ describe('root / tests', function () {
         describe('/login POST', function () {
             it('With valid credentials (also tests refresh token cleanup policy)', function (done) {
                 (async () => {
-                    const refreshTokenCount = async () => ((await findUserById(userData.user._id)).refreshTokens).length
-                    await addUserRefreshToken(userData.user._id, userData.refreshToken + 'w', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_1_DAYS))
-                    await addUserRefreshToken(userData.user._id, userData.refreshToken + 'x', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_1_DAYS))
-                    await addUserRefreshToken(userData.user._id, userData.refreshToken + 'y', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_2_DAYS))
-                    await addUserRefreshToken(userData.user._id, userData.refreshToken + 'z', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_2_DAYS))
+                    const refreshTokenCount = async () => ((await findUserById(userData.user.id)).refreshTokens).length
+                    await addUserRefreshToken(userData.user.id, userData.refreshToken + 'w', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_1_DAYS))
+                    await addUserRefreshToken(userData.user.id, userData.refreshToken + 'x', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_1_DAYS))
+                    await addUserRefreshToken(userData.user.id, userData.refreshToken + 'y', '::ffff:127.0.0.1', '', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_2_DAYS))
+                    await addUserRefreshToken(userData.user.id, userData.refreshToken + 'z', '::ffff:127.0.0.1', 'test', new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_2_DAYS))
                     if (await refreshTokenCount() !== 4) throw null
                     const res = await request(app).post('/api/login').send({ email, password })
                     expect(res.body).to.have.property('token')
@@ -161,7 +161,7 @@ describe('root / tests', function () {
         describe('/token POST', function () {
             it('With a valid refresh token (also tests refreshToken.date update)', function (done) {
                 (async () => {
-                    const topRefreshToken = async () => ((await findUserById(userData.user._id)).refreshTokens)[0]
+                    const topRefreshToken = async () => ((await findUserById(userData.user.id)).refreshTokens)[0]
                     const initialToken = await topRefreshToken()
                     if (!initialToken) throw null
                     const res = await request(app).post('/api/token').send({ refreshToken: userData.refreshToken })
@@ -182,7 +182,7 @@ describe('root / tests', function () {
         describe('/logout POST', function () {
             it('With a valid refresh token', function (done) {
                 (async () => {
-                    const refreshTokenCount = async () => ((await findUserById(userData.user._id)).refreshTokens).length
+                    const refreshTokenCount = async () => ((await findUserById(userData.user.id)).refreshTokens).length
                     let originalCount = await refreshTokenCount()
                     const res = await request(app).post('/api/logout').set('Authorization', `Bearer ${userData.token}`).send({ refreshToken: userData.refreshToken })
                     expect(res.status).to.equal(200)
@@ -191,7 +191,7 @@ describe('root / tests', function () {
             })
             it('With an invalid refresh token', function (done) {
                 (async () => {
-                    const refreshTokenCount = async () => ((await findUserById(userData.user._id)).refreshTokens).length
+                    const refreshTokenCount = async () => ((await findUserById(userData.user.id)).refreshTokens).length
                     let originalCount = await refreshTokenCount()
                     const res = await request(app).post('/api/logout').set('Authorization', `Bearer ${userData.token}`).send({ refreshToken: userData.refreshToken + 'x' })
                     expect(res.status).to.equal(400)
