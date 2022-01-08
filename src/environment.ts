@@ -1,8 +1,6 @@
 // Environment variable validation and parsing
 // ensureEnvVars() should be run at the earliest possible point in app execution
 
-import dotenv from 'dotenv'
-
 // Tell TypeScript that process.env should have these variables
 declare global {
   namespace NodeJS {
@@ -10,24 +8,21 @@ declare global {
       NODE_ENV: 'development' | 'production' | 'test'
       JWT_AUTH_KEY: string
       JWT_EMAIL_VERIFICATION_KEY: string
-      DB_CONN_STRING: string
+      DATABASE_URL: string
       SENDER_EMAIL: string
       STRINGIFIED_NODEMAILER_OPTIONS_JSON: string
-      REFRESH_TOKEN_CLEANUP_1_DAYS: number
-      REFRESH_TOKEN_CLEANUP_2_DAYS: number
-      ACCESS_TOKEN_DURATION_MINUTES: number
-      EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES: number
-      PASSWORD_RESET_TOKEN_DURATION_MINUTES: number
+      REFRESH_TOKEN_CLEANUP_1_DAYS: string
+      REFRESH_TOKEN_CLEANUP_2_DAYS: string
+      ACCESS_TOKEN_DURATION_MINUTES: string
+      EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES: string
+      PASSWORD_RESET_TOKEN_DURATION_MINUTES: string
     }
   }
 }
 
-// Import variables from .env file if it exists
-dotenv.config()
-
 // Validate and parse the environment variables as defined in the process.env interface declared above
 export const ensureEnvVars = () => {
-  ['NODE_ENV', 'JWT_AUTH_KEY', 'JWT_EMAIL_VERIFICATION_KEY', 'DB_CONN_STRING', 'SENDER_EMAIL'].forEach(ev => ensureNonEmptyString(process.env[ev], ev))
+  ['NODE_ENV', 'JWT_AUTH_KEY', 'JWT_EMAIL_VERIFICATION_KEY', 'DATABASE_URL', 'SENDER_EMAIL'].forEach(ev => ensureNonEmptyString(process.env[ev], ev))
 
   if (!(process.env['NODE_ENV'] === 'production' || process.env['NODE_ENV'] === 'development' || process.env['NODE_ENV'] === 'test'))
     throw new Error('process.env.NODE_ENV must be either \'production\', \'development\', or \'test\'')
@@ -63,5 +58,5 @@ const parsePositiveNum = (value: any, name: string | null = null) => {
     } catch { }
   }
   if (!(typeof value === 'number' && value > 0)) throw new Error(`Failed to parse${name ? ` ${name} ` : ' '}as a positive number`)
-  return value
+  return value.toString()
 }

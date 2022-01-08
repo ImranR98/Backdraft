@@ -4,18 +4,19 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
-    "all": "npm run test && npm run build && npm run start",
-    "start": "NODE_ENV=production node dist/server.js",
-    "dev": "NODE_ENV=development nodemon -w 'src/**/*.ts' --ignore src/routes/ -x 'tsoa spec-and-routes && ts-node' src/server.ts",
+    "all": "npm run test && npm run build && npm run start",    
+    "dev": "dotenv -e .env -- nodemon -w 'src/**/*.ts' --ignore src/routes/ -x 'tsoa spec-and-routes && ts-node' src/server.ts",
+    "test": "tsoa spec-and-routes && dotenv -e .test.env -e .env -- prisma migrate deploy && dotenv -e .test.env -e .env -- mocha --exit -r ts-node/register -r test/hooks.ts test/*.test.ts",
     "build": "tsoa spec-and-routes && tsc",
-    "test": "tsoa spec-and-routes && NODE_ENV=test mocha --exit --require ts-node/register --require test/hooks.ts test/*.test.ts"
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^3.7.0",
     "bcrypt": "^5.0.1",
-    "dotenv": "^10.0.0",
+    "dotenv-cli": "^4.1.1",
     "express": "^4.17.2",
     "helmet": "^4.6.0",
     "jsonwebtoken": "^8.5.1",
@@ -44,6 +45,7 @@
     "mocha": "^9.1.3",
     "mongodb-memory-server": "^8.0.4",
     "nodemon": "^2.0.15",
+    "prisma": "^3.7.0",
     "supertest": "^6.1.6",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4"

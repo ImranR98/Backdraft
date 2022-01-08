@@ -20,7 +20,7 @@ const app: express.Application = express()
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(helmet()) // Helmet sets some HTTP headers that are recommended for security
-if (process.env.NODE_ENV === 'production') // If in production, log requests
+if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') // If in production, log requests
     app.use(morgan('combined', { stream: { write: (message) => logger.http(message.replace('\n', '')) } }))
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc))
 

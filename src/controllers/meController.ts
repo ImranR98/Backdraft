@@ -16,7 +16,7 @@ export class MeController extends Controller {
     @SuccessResponse('200', 'Ok')
     @Get()
     public async me(@Request() req: express.Request): Promise<ClientUserInterface> {
-        return await new userService().me((<any>req).user._id)
+        return await new userService().me((<any>req).user.id)
     }
 
     /** Delete a refresh token ("login") attached to the authenticated user's account.
@@ -25,11 +25,11 @@ export class MeController extends Controller {
     @SuccessResponse('204', 'Login revoked')
     @Delete('logins/{tokenId}')
     public async revokeLogin(
-        @Path() tokenId: string,
+        @Path() tokenId: number,
         @Request() req: express.Request
     ): Promise<void> {
         this.setStatus(204)
-        await new authService().revokeRefreshTokenByTokenId(tokenId, (<any>req).user._id)
+        await new authService().revokeRefreshTokenByTokenId(tokenId, (<any>req).user.id)
     }
 
     /** Change the authenticated user's password, while optionally deleting any refresh tokens ("logins") attached to their account. */
@@ -48,7 +48,7 @@ export class MeController extends Controller {
         @Header('user-agent') userAgent?: string
     ): Promise<{ refreshToken: string } | void> {
         this.setStatus(revokeRefreshTokens ? 200 : 204 )
-        return await new authService().changePassword((<any>req).user._id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent || '')
+        return await new authService().changePassword((<any>req).user.id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent || '')
     }
 
     /** Begin verification for a new email to replace the authenticated user's existing email. */
@@ -66,6 +66,6 @@ export class MeController extends Controller {
         @Request() req: express.Request
     ): Promise<void> {
         this.setStatus(204)
-        await new authService().changeEmail((<any>req).user._id, password, email, clientVerificationURL)
+        await new authService().changeEmail((<any>req).user.id, password, email, clientVerificationURL)
     }
 }
