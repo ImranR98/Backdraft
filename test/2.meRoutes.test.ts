@@ -44,9 +44,9 @@ describe('/me tests', function () {
             }).catch((err) => done(err))
         })
         it('With a wrong tokenId', function (done) {
-            request(app).delete('/api/me/logins/' + userData.user.refreshTokens[0].id + 'x').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0].id + 'x' }).then((res) => {
-                expect(res.status).to.equal(500)
-                expect(res.body).to.contain({ code: 'SERVER_ERROR' })
+            request(app).delete('/api/me/logins/' + userData.user.refreshTokens[0].id + 'x').set('Authorization', `Bearer ${userData.token}`).send({ tokenId: userData.user.refreshTokens[0].id + '9999' }).then((res) => {
+                expect(res.status).to.equal(422)
+                expect(res.body).to.contain({ code: 'VALIDATION_ERROR' })
                 done()
             }).catch((err) => done(err))
         })

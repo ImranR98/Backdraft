@@ -1,8 +1,6 @@
 // Environment variable validation and parsing
 // ensureEnvVars() should be run at the earliest possible point in app execution
 
-import dotenv from 'dotenv'
-
 // Tell TypeScript that process.env should have these variables
 declare global {
   namespace NodeJS {
@@ -13,17 +11,14 @@ declare global {
       DATABASE_URL: string
       SENDER_EMAIL: string
       STRINGIFIED_NODEMAILER_OPTIONS_JSON: string
-      REFRESH_TOKEN_CLEANUP_1_DAYS: number
-      REFRESH_TOKEN_CLEANUP_2_DAYS: number
-      ACCESS_TOKEN_DURATION_MINUTES: number
-      EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES: number
-      PASSWORD_RESET_TOKEN_DURATION_MINUTES: number
+      REFRESH_TOKEN_CLEANUP_1_DAYS: string
+      REFRESH_TOKEN_CLEANUP_2_DAYS: string
+      ACCESS_TOKEN_DURATION_MINUTES: string
+      EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES: string
+      PASSWORD_RESET_TOKEN_DURATION_MINUTES: string
     }
   }
 }
-
-// Import variables from .env file if it exists
-dotenv.config()
 
 // Validate and parse the environment variables as defined in the process.env interface declared above
 export const ensureEnvVars = () => {
@@ -63,5 +58,5 @@ const parsePositiveNum = (value: any, name: string | null = null) => {
     } catch { }
   }
   if (!(typeof value === 'number' && value > 0)) throw new Error(`Failed to parse${name ? ` ${name} ` : ' '}as a positive number`)
-  return value
+  return value.toString()
 }

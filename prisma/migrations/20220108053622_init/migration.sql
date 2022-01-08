@@ -3,6 +3,7 @@ CREATE TABLE "RefreshToken" (
     "id" SERIAL NOT NULL,
     "refreshToken" TEXT NOT NULL,
     "userAgent" TEXT NOT NULL,
+    "ip" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "userId" INTEGER NOT NULL,
 
@@ -23,10 +24,7 @@ CREATE TABLE "User" (
 CREATE UNIQUE INDEX "RefreshToken_refreshToken_key" ON "RefreshToken"("refreshToken");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "RefreshToken_userId_key" ON "RefreshToken"("userId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- AddForeignKey
-ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

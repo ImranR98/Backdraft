@@ -1,6 +1,6 @@
 # 🔥 Backdraft
 
-Node.js, Express, and MongoDB based web server with simple user authentication, to be used as a template or starting off point for backend projects.
+Node.js, Express, and PostgreSQL based web server with simple user authentication, to be used as a template or starting off point for backend projects.
 
 [Frontload](https://github.com/ImranR98/Frontload) is the frontend counterpart to this project.
 
@@ -19,16 +19,16 @@ This project helps avoid such issues by providing a solid foundation that includ
 - User authentication using JWT and refresh tokens.
 - Ability for authenticated users to manage their credentials and refresh tokens.
 - Auto generated OpenAPI spec and Swagger UI endpoint using tsoa and Swagger-UI-Express.
-- Automated testing for all API endpoints using Mocha, Chai, SuperTest, and mongodb-memory-server.
+- Automated testing for all API endpoints using Mocha, Chai, and SuperTest
 - Standardized logging using Winston and Morgan.
-- Mongoose and TypeScript used for easier database querying and increased type safety.
+- Prisma and TypeScript used for easier database management and increased type safety.
 - User email verification and password reset enabled by Nodemailer.
 
 
 
-## Setup/Usage
+## Setup/Usage & Environment
 1. Use `npm i` to install required dependencies.
-2. Create a copy of `template.env`, rename it to `.env`, and fill in the appropriate details as described in that file. Refer to the `dotenv` [documentation](https://www.npmjs.com/package/dotenv) for details on how this works. Alternatively, set up environment variables some other way.
+2. Create a copy of `template.env`, rename it to `.env`, and fill in the appropriate details for your development environment, as described in that file. Refer to the `dotenv` [documentation](https://www.npmjs.com/package/dotenv) for details on how this works. Rename `template.test.env` to `.test.env` and repeat the process for your test environment - this usually involves defining a separate database to run tests on. Any variables not defined in `.test.env` will fall back to the values in `.env`. It is assumed that you will not use a `.env` file to set environment variables in production.
 3. Test the project, build it for production, or run it in a development environment using the scripts defined in `package.json`.
 
 By default, all endpoints are located in `/api`, and the Swagger UI endpoint is `/api/docs`.
@@ -36,13 +36,15 @@ By default, all endpoints are located in `/api`, and the Swagger UI endpoint is 
 
 ## Project Structure
 
-### DB - TODO: Update this
+### DB
 
-Each file in the `db` directory (aside from `dbConnection.ts`) defines a model used in the database. These models are never directly exported to other files. Instead, this file also defines various query functions that are used to make changes to the database. This means that the database layer is abstracted away and can be swapped out later if needed, without changing the controllers.
+The `prisma` directory contains a database schema definition used by the [Prisma](https://www.prisma.io/) ORM. 
+
+The `prismaClient.ts` file in the `db` directory defines and exports a Prisma client objects that can be used in the application.
+
+The remaining files in the `db` directory define various query functions that are used to make changes to the database. This means that the database layer is abstracted away and can be swapped out later if needed, without changing the services.
 
 Note that this layer has minimal validation as this is mostly done in the services.
-
-The `dbConnection.ts` file exports functions used to connect/disconnect to/from the DB, including for testing.
 
 ### Services
 
@@ -80,7 +82,7 @@ The remaining files in `/src` include:
 ## Typical Flow for Implementing New Features
 
 Implementing new functionality in the application usually involves:
-1. Creating the relevant DB models
+1. Updating the Prisma schema as needed and performing a DB migration accordingly (by running `npx prisma migrate deploy`).
 2. Implementing the relevant services (and interfaces if needed)
 3. Adding the relevant controllers
 4. Implementing fuctional tests for the new endpoints
@@ -91,7 +93,7 @@ Implementing new functionality in the application usually involves:
 ## Testing
 Each `.test.ts` file in the `test` directory contains functional Mocha tests for a particular set of server endpoints. All root hook plugins are in `hooks.ts`.
 
-In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to a new, empty test database (in memory, using mongodb-memory-server). This also means that, for example, a test that requires the existence of a logged in user would need a "test" user to be created first in `before` or `beforeEach` hooks. Such commonly used "preparation" functions are kept in `testData.ts`.
+In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to an empty test database (that should be prepared beforehand and defined in an environment variable). This also means that, for example, a test that requires the existence of a logged in user would need a "test" user to be created first in `before` or `beforeEach` hooks. Such commonly used "preparation" functions are kept in `testData.ts`.
 
 
 

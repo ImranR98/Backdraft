@@ -1,6 +1,6 @@
 // Provides functions related to authentication, and any user-related functions that have to do with credentials (email and password)
 
-import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, deleteUserByID, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateUserRefreshToken, removeRefreshTokenByTokenId, removeRefreshTokenByTokenString } from '../db/userQueries'
+import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, deleteUserByID, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateRefreshToken, removeRefreshTokenByTokenId, removeRefreshTokenByTokenString, removeAllUserRefreshTokens } from '../db/userQueries'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { PresentableError } from '../helpers/clientErrorHelper'
@@ -25,11 +25,16 @@ export class authService {
         }
     }
 
+    private async ensureEmail(email: string) {
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+        if (!emailRegex.test(email)) throw new PresentableError('VALIDATION_ERROR', 'Not a valid email')
+    }
+
     private async assignNewRefreshToken(userId: number, ip: string, userAgent: string) {
         const refreshToken = crypto.randomBytes(64).toString('hex')
         await addUserRefreshToken(userId, refreshToken, ip, userAgent)
-        await removeOldUserRefreshTokens(userId, new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_1_DAYS), ip, userAgent) // Unused for at least 30 days and from the same IP, user-agent
-        await removeOldUserRefreshTokens(userId, new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * process.env.REFRESH_TOKEN_CLEANUP_2_DAYS)) // Unused for at least a year
+        await removeOldUserRefreshTokens(userId, new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * Number.parseFloat(process.env.REFRESH_TOKEN_CLEANUP_1_DAYS)), ip, userAgent) // Unused for at least 30 days and from the same IP, user-agent
+        await removeOldUserRefreshTokens(userId, new Date((new Date()).valueOf() - 1000 * 60 * 60 * 24 * Number.parseFloat(process.env.REFRESH_TOKEN_CLEANUP_2_DAYS))) // Unused for at least a year
         return refreshToken
     }
 
@@ -49,7 +54,7 @@ export class authService {
     }
 
     private async beginEmailVerification(userId: number, email: string, verificationUrl: string) {
-        const verificationToken = createJWT({ id: userId, email }, process.env.JWT_EMAIL_VERIFICATION_KEY, process.env.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES)
+        const verificationToken = createJWT({ id: userId, email }, process.env.JWT_EMAIL_VERIFICATION_KEY, Number.parseFloat(process.env.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES))
         await updateUserEmail(userId, email, false)
         const link = `${verificationUrl}?emailVerificationToken=${verificationToken}`
         await sendEmail(email, 'Email Verification Link',
@@ -61,6 +66,7 @@ export class authService {
     }
 
     public async signup(email: string, password: string, verificationUrl: string) {
+        await this.ensureEmail(email)
         await this.ensureURL(verificationUrl)
         await this.prepareForEmailVerification(email)
         const user = await createUser(email, await this.checkAndHashPassword(password))
@@ -68,6 +74,7 @@ export class authService {
     }
 
     public async changeEmail(userId: number, password: string, newEmail: string, verificationUrl: string) {
+        await this.ensureEmail(newEmail)
         await this.ensureURL(verificationUrl)
         newEmail = newEmail.trim()
         const user = await findUserById(userId)
@@ -100,14 +107,14 @@ export class authService {
         if (!auth) throw new PresentableError('INVALID_LOGIN')
         if (!user.verified) throw new PresentableError('NOT_VERIFIED')
         const refreshToken = await this.assignNewRefreshToken(user.id, ip, userAgent)
-        return { token: createJWT({ id: user.id }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES), refreshToken }
+        return { token: createJWT({ id: user.id }, process.env.JWT_AUTH_KEY, Number.parseFloat(process.env.ACCESS_TOKEN_DURATION_MINUTES)), refreshToken }
     }
 
     public async getAccessToken(refreshToken: string, ip: string, userAgent: string) {
         const user = await findUserByRefreshToken(refreshToken)
         if (!user) throw new PresentableError('INVALID_REFRESH_TOKEN')
-        await updateUserRefreshToken(user.id, refreshToken, ip, userAgent)
-        return { token: createJWT({ id: user.id }, process.env.JWT_AUTH_KEY, process.env.ACCESS_TOKEN_DURATION_MINUTES) }
+        await updateRefreshToken(refreshToken, ip, userAgent)
+        return { token: createJWT({ id: user.id }, process.env.JWT_AUTH_KEY, Number.parseFloat(process.env.ACCESS_TOKEN_DURATION_MINUTES)) }
     }
 
     public async revokeRefreshTokenByTokenString(refreshToken: string) {
@@ -124,17 +131,18 @@ export class authService {
         if (!user) throw new PresentableError('USER_NOT_FOUND')
         const auth = await bcrypt.compare(password, user.password)
         if (!auth) throw new PresentableError('WRONG_PASSWORD')
-        let changes: any = { password: await this.checkAndHashPassword(newPassword) }
-        if (revokeRefreshTokens) changes.refreshTokens = []
-        await updateUser(userId, changes)
-        if (revokeRefreshTokens) return { refreshToken: await this.assignNewRefreshToken(userId, ip, userAgent) }
+        await updateUser(userId, { password: await this.checkAndHashPassword(newPassword) })
+        if (revokeRefreshTokens) {
+            await removeAllUserRefreshTokens(userId)
+            return { refreshToken: await this.assignNewRefreshToken(userId, ip, userAgent) }
+        }
     }
 
     public async beginPasswordReset(email: string, verificationUrl: string) {
         await this.ensureURL(verificationUrl)
         const user = await findUserByEmail(email)
         if (!user) throw new PresentableError('USER_NOT_FOUND')
-        const passwordToken = createJWT({ userId: user.id }, user.password, process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES)
+        const passwordToken = createJWT({ userId: user.id }, user.password, Number.parseFloat(process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES))
         const link = `${verificationUrl}?passwordResetToken=${passwordToken}`
         await sendEmail(email, 'Password Reset Link',
             `To verify this email, go to ${link}. This will expire in ${process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES} minutes.`,
