@@ -96,7 +96,8 @@ Each `.test.ts` file in the `test` directory contains functional Mocha tests for
 
 In principle, each test should be fully independent and isolated from others. This means that there should be a root hook plugin that connects to an empty test database (that should be prepared beforehand and defined in an environment variable). This also means that, for example, a test that requires the existence of a logged in user would need a "test" user to be created first in `before` or `beforeEach` hooks. Such commonly used "preparation" functions are kept in `testData.ts`.
 
-
+## Auto-generated API Docs - Screenshot Example
+![Auto-generated API Docs - Screenshot Example](./docs-screenshot.png)
 
 ------
 
