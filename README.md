@@ -2,6 +2,8 @@
 
 Node.js, Express, and PostgreSQL based web server with simple user authentication, to be used as a template or starting off point for backend projects.
 
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ImranR98_Backdraft&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ImranR98_Backdraft) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=ImranR98_Backdraft&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=ImranR98_Backdraft) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=ImranR98_Backdraft&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=ImranR98_Backdraft) [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ImranR98_Backdraft&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=ImranR98_Backdraft) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=ImranR98_Backdraft&metric=bugs)](https://sonarcloud.io/summary/new_code?id=ImranR98_Backdraft)
+
 ***[Frontload](https://github.com/ImranR98/Frontload)* is the frontend counterpart to this project.**
 
 
