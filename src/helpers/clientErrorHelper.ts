@@ -16,8 +16,6 @@ const customErrors = {
     'ITEM_NOT_FOUND': { httpCode: 400 },
     'WRONG_PASSWORD': { httpCode: 400 },
     'INVALID_PASSWORD': { httpCode: 400 },
-    'ALREADY_VERIFIED': { httpCode: 400 },
-    'NOT_VERIFIED': { httpCode: 400 },
     'EMAIL_IN_USE': { httpCode: 400 },
     'EMAIL_ALREADY_SET': { httpCode: 400 },
     'VALIDATION_ERROR': { httpCode: 422 },

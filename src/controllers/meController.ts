@@ -1,5 +1,5 @@
 import express from 'express'
-import { Body, Controller, Delete, Get, Header, Path, Put, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
+import { Body, Controller, Delete, Get, Header, Path, Post, Put, Request, Response, Route, Security, SuccessResponse } from 'tsoa'
 import { ClientErrorInterface } from '../interfaces/ClientErrorInterface'
 import { ClientUserInterface } from '../interfaces/ClientUserInterface'
 import { authService } from '../services/authService'
@@ -51,21 +51,37 @@ export class MeController extends Controller {
         return await new authService().changePassword((<any>req).user.id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent || '')
     }
 
-    /** Begin verification for a new email to replace the authenticated user's existing email. */
-    @SuccessResponse('204', 'Verification email sent')
-    @Put('email')
-    public async changeEmail(
-        @Body() { password, email, clientVerificationURL }: {
+    /** Begin the email change process by sending a verification code to the user's new email and returning an associated token. */
+    @SuccessResponse('200', 'Verification email sent and associated token generated')
+    @Post('begin-change-email')
+    public async beginChangeEmail(
+        @Body() { email, password }: {
             /** The user's password */
-            password: string,
+            password: string
             /** The user's new email */
-            email: string,
-            /** The client application URL that the verification email will link the user to (with their email verification token) */
-            clientVerificationURL: string
+            email: string
+        },
+        @Request() req: express.Request
+    ): Promise<{ token: string}> {
+        this.setStatus(200)
+        return await new authService().beginChangeEmail((<any>req).user.id, password, email)
+    }
+
+    /** Complete a user's signup by verifying that the provided verification code matches the email and token*/
+    @SuccessResponse('204', 'Sign up complete')
+    @Post('complete-change-email')
+    public async completeChangeEmail(
+        @Body() { email, token, code }: {
+            /** The user's new email */
+            email: string
+            /** The token generated when the user began the email change process */
+            token: string
+            /** The email verification code received by the user */
+            code: string
         },
         @Request() req: express.Request
     ): Promise<void> {
         this.setStatus(204)
-        await new authService().changeEmail((<any>req).user.id, password, email, clientVerificationURL)
+        await new authService().completeChangeEmail((<any>req).user.id, email, token, code)
     }
 }

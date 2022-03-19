@@ -83,7 +83,7 @@ The remaining files in `/src` include:
 ## Typical Flow for Implementing New Features
 
 Implementing new functionality in the application usually involves:
-1. Updating the Prisma schema as needed and performing a DB migration accordingly (by running `npx prisma migrate deploy`).
+1. Updating the Prisma schema as needed and performing a DB migration accordingly (by running `npx prisma migrate dev`).
 2. Implementing the relevant services (and interfaces if needed)
 3. Adding the relevant controllers
 4. Implementing fuctional tests for the new endpoints

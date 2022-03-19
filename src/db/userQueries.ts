@@ -2,7 +2,7 @@
 import prisma from './prismaClient'
 
 // Queries
-export const createUser = async (email: string, hashedPassword: string, verified: boolean = false) => await prisma.user.create({ data: { email, verified, password: hashedPassword } })
+export const createUser = async (email: string, hashedPassword: string) => await prisma.user.create({ data: { email, password: hashedPassword } })
 
 export const findUserById = async (userId: number) => await prisma.user.findFirst({ where: { id: userId }, include: { refreshTokens: {} } })
 export const findUserByEmail = async (email: string) => await prisma.user.findFirst({ where: { email }, include: { refreshTokens: {} } })
@@ -13,7 +13,7 @@ export const deleteUserByID = async (userId: number) => {
 }
 
 export const updateUser = async (userId: number, changes: Object) => await prisma.user.update({ where: { id: userId }, data: changes })
-export const updateUserEmail = async (userId: number, email: string, verified: boolean) => await prisma.user.update({ where: { id: userId }, data: { email, verified } })
+export const updateUserEmail = async (userId: number, email: string) => await prisma.user.update({ where: { id: userId }, data: { email } })
 
 export const addUserRefreshToken = async (userId: number, refreshToken: string, ip: string, userAgent: string) => await prisma.refreshToken.create({
   data: { userId, refreshToken, ip, userAgent }
