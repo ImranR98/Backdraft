@@ -1,6 +1,6 @@
 // Provides functions related to authentication, and any user-related functions that have to do with credentials (email and password)
 
-import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, deleteUserByID, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateRefreshToken, removeRefreshTokenByTokenId, removeRefreshTokenByTokenString, removeAllUserRefreshTokens } from '../db/userQueries'
+import { createUser, findUserById, findUserByEmail, findUserByRefreshToken, updateUser, updateUserEmail, addUserRefreshToken, removeOldUserRefreshTokens, updateRefreshToken, removeRefreshTokenByTokenId, removeRefreshTokenByTokenString, removeAllUserRefreshTokens } from '../db/userQueries'
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { PresentableError } from '../helpers/clientErrorHelper'
@@ -50,7 +50,7 @@ export class authService {
     public async beginSignup(email: string) {
         await this.ensureEmail(email)
         if (await findUserByEmail(email)) throw new PresentableError('EMAIL_IN_USE')
-        const verificationData = await generateOTPAndHash(email, 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
+        const verificationData = generateOTPAndHash(email, 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
         await this.sendOTPEmail(email + '.signup', verificationData.otp, process.env.OTP_DURATION_MINUTES, 'Email Verification Code')
         return { token: verificationData.fullHash }
     }
@@ -70,7 +70,7 @@ export class authService {
         if (!auth) throw new PresentableError('WRONG_PASSWORD')
         if (user.email === newEmail.toLowerCase().trim()) throw new PresentableError('EMAIL_ALREADY_SET')
         if (await findUserByEmail(newEmail)) throw new PresentableError('EMAIL_IN_USE')
-        const verificationData = await generateOTPAndHash(newEmail + userId.toString() + '.email', 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
+        const verificationData = generateOTPAndHash(newEmail + userId.toString() + '.email', 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
         await this.sendOTPEmail(newEmail, verificationData.otp, process.env.OTP_DURATION_MINUTES, 'Email Verification Code')
         return { token: verificationData.fullHash }
     }
@@ -85,7 +85,7 @@ export class authService {
     public async beginResetPassword(email: string) {
         const user = await findUserByEmail(email)
         if (!user) throw new PresentableError('USER_NOT_FOUND')
-        const verificationData = await generateOTPAndHash(email + '.password', 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
+        const verificationData = generateOTPAndHash(email + '.password', 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
         await this.sendOTPEmail(email, verificationData.otp, process.env.OTP_DURATION_MINUTES, 'Password Reset Code')
         return { token: verificationData.fullHash }
     }

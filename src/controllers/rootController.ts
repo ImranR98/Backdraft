@@ -18,7 +18,7 @@ export class RootController extends Controller {
         },
     ): Promise<{ token: string }> {
         this.setStatus(200)
-        return await new authService().beginSignup(email)
+        return new authService().beginSignup(email)
     }
 
     /** Complete a user's signup by verifying that the provided verification code matches the email and token*/
@@ -50,7 +50,7 @@ export class RootController extends Controller {
         },
     ): Promise<{ token: string }> {
         this.setStatus(200)
-        return await new authService().beginResetPassword(email)
+        return new authService().beginResetPassword(email)
     }
 
     /** Complete a user's password reset by verifying that the provided verification code matches the email and token*/

@@ -64,7 +64,7 @@ export class MeController extends Controller {
         @Request() req: express.Request
     ): Promise<{ token: string }> {
         this.setStatus(200)
-        return await new authService().beginChangeEmail((<any>req).user.id, password, email)
+        return new authService().beginChangeEmail((<any>req).user.id, password, email)
     }
 
     /** Complete a user's signup by verifying that the provided verification code matches the email and token*/
