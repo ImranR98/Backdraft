@@ -50,13 +50,13 @@ export class authService {
     public async beginSignup(email: string) {
         await this.ensureEmail(email)
         if (await findUserByEmail(email)) throw new PresentableError('EMAIL_IN_USE')
-        const verificationData = await generateOTPAndHash(email, 6, Number.parseFloat(process.env.EMAIL_VERIFICATION_OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
-        await this.sendOTPEmail(email, verificationData.otp, process.env.EMAIL_VERIFICATION_OTP_DURATION_MINUTES, 'Email Verification Code')
+        const verificationData = await generateOTPAndHash(email, 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
+        await this.sendOTPEmail(email + '.signup', verificationData.otp, process.env.OTP_DURATION_MINUTES, 'Email Verification Code')
         return { token: verificationData.fullHash }
     }
     /** Verifies the provided hash and OTP with the provided email, then creates a new user with the provided email and password */
     public async completeSignup(email: string, password: string, token: string, code: string) {
-        if (!verifyOTP(email, token, code, process.env.GENERAL_VERIFICATION_KEY)) throw new PresentableError('INVALID_TOKEN')
+        if (!verifyOTP(email + '.signup', token, code, process.env.GENERAL_VERIFICATION_KEY)) throw new PresentableError('INVALID_TOKEN')
         if (await findUserByEmail(email)) throw new PresentableError('EMAIL_IN_USE')
         await createUser(email, await this.checkAndHashPassword(password))
     }
@@ -64,19 +64,19 @@ export class authService {
     /** Sends an OTP to the provided email (if the specified user exists) and returns a hash, with the email and provided userId as part of the hashed data */
     public async beginChangeEmail(userId: number, password: string, newEmail: string) {
         await this.ensureEmail(newEmail)
-        if (await findUserByEmail(newEmail)) throw new PresentableError('EMAIL_IN_USE')
         const user = await findUserById(userId)
         if (!user) throw new PresentableError('USER_NOT_FOUND')
         const auth = await bcrypt.compare(password, user.password)
         if (!auth) throw new PresentableError('WRONG_PASSWORD')
         if (user.email === newEmail.toLowerCase().trim()) throw new PresentableError('EMAIL_ALREADY_SET')
-        const verificationData = await generateOTPAndHash(newEmail + userId.toString(), 6, Number.parseFloat(process.env.EMAIL_VERIFICATION_OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
-        await this.sendOTPEmail(newEmail, verificationData.otp, process.env.EMAIL_VERIFICATION_OTP_DURATION_MINUTES, 'Email Verification Code')
+        if (await findUserByEmail(newEmail)) throw new PresentableError('EMAIL_IN_USE')
+        const verificationData = await generateOTPAndHash(newEmail + userId.toString() + '.email', 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
+        await this.sendOTPEmail(newEmail, verificationData.otp, process.env.OTP_DURATION_MINUTES, 'Email Verification Code')
         return { token: verificationData.fullHash }
     }
     /** Verifies the provided hash and OTP with the provided email and userId, then updates the user with the new email */
     public async completeChangeEmail(userId: number, newEmail: string, token: string, code: string) {
-        if (!verifyOTP(newEmail + userId.toString(), token, code, process.env.GENERAL_VERIFICATION_KEY)) throw new PresentableError('INVALID_TOKEN')
+        if (!verifyOTP(newEmail + userId.toString() + '.email', token, code, process.env.GENERAL_VERIFICATION_KEY)) throw new PresentableError('INVALID_TOKEN')
         if (await findUserByEmail(newEmail)) throw new PresentableError('EMAIL_IN_USE')
         await updateUserEmail(userId, newEmail)
     }
@@ -85,13 +85,13 @@ export class authService {
     public async beginResetPassword(email: string) {
         const user = await findUserByEmail(email)
         if (!user) throw new PresentableError('USER_NOT_FOUND')
-        const verificationData = await generateOTPAndHash(email, 6, Number.parseFloat(process.env.PASSWORD_RESET_OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
-        await this.sendOTPEmail(email, verificationData.otp, process.env.PASSWORD_RESET_OTP_DURATION_MINUTES, 'Password Reset Code')
+        const verificationData = await generateOTPAndHash(email + '.password', 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
+        await this.sendOTPEmail(email, verificationData.otp, process.env.OTP_DURATION_MINUTES, 'Password Reset Code')
         return { token: verificationData.fullHash }
     }
      /** Verifies the provided hash and OTP with the provided email, then updates the user with the provided password */
     public async completeResetPassword(email: string, password: string, token: string, code: string) {
-        if (!verifyOTP(email.toString(), token, code, process.env.GENERAL_VERIFICATION_KEY)) throw new PresentableError('INVALID_TOKEN')
+        if (!verifyOTP(email + '.password', token, code, process.env.GENERAL_VERIFICATION_KEY)) throw new PresentableError('INVALID_TOKEN')
         const user = await findUserByEmail(email)
         if (!user) throw new PresentableError('USER_NOT_FOUND')
         await updateUser(user.id, { password: await this.checkAndHashPassword(password) })

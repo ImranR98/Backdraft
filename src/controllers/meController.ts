@@ -47,7 +47,7 @@ export class MeController extends Controller {
         @Request() req: express.Request,
         @Header('user-agent') userAgent?: string
     ): Promise<{ refreshToken: string } | void> {
-        this.setStatus(revokeRefreshTokens ? 200 : 204 )
+        this.setStatus(revokeRefreshTokens ? 200 : 204)
         return await new authService().changePassword((<any>req).user.id, password, newPassword, revokeRefreshTokens || false, req.ip, userAgent || '')
     }
 
@@ -62,7 +62,7 @@ export class MeController extends Controller {
             email: string
         },
         @Request() req: express.Request
-    ): Promise<{ token: string}> {
+    ): Promise<{ token: string }> {
         this.setStatus(200)
         return await new authService().beginChangeEmail((<any>req).user.id, password, email)
     }

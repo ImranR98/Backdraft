@@ -16,7 +16,7 @@ export class RootController extends Controller {
             /** The new user's email */
             email: string
         },
-    ): Promise<{ token: string}> {
+    ): Promise<{ token: string }> {
         this.setStatus(200)
         return await new authService().beginSignup(email)
     }
@@ -40,7 +40,7 @@ export class RootController extends Controller {
         await new authService().completeSignup(email, password, token, code)
     }
 
-     /** Begin the password reset process by sending a verification code to the user's email and returning an associated token. */
+    /** Begin the password reset process by sending a verification code to the user's email and returning an associated token. */
     @SuccessResponse('200', 'Reset email sent and associated token generated')
     @Post('begin-reset-password')
     public async beginResetPassword(
@@ -48,9 +48,9 @@ export class RootController extends Controller {
             /** The user's email */
             email: string
         },
-    ): Promise<void> {
+    ): Promise<{ token: string }> {
         this.setStatus(200)
-        await new authService().beginResetPassword(email)
+        return await new authService().beginResetPassword(email)
     }
 
     /** Complete a user's password reset by verifying that the provided verification code matches the email and token*/

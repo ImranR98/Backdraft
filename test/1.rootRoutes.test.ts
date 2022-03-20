@@ -5,124 +5,171 @@ import request from 'supertest'
 
 import { app } from '../src/app'
 
-import { addUserRefreshToken, findUserById } from '../src/db/userQueries'
+import { findUserById } from '../src/db/userQueries'
 
-import { password, email, createTestUser, clientVerificationURL } from './testData'
+import { password, email, createTestUser, generateTestUserOTP, generateTestUserJWT } from './testData'
 
 describe('root / tests', function () {
     describe('When the DB is empty', function () {
-        describe('/signup POST', function () {
+        describe('/begin-signup POST', function () {
             this.timeout('50000')
-            it('With valid credentials', function (done) {
-                request(app).post('/api/signup').send({ email, password, clientVerificationURL }).then((res) => {
-                    expect(res.status).to.equal(201)
+            it('With a valid email', function (done) {
+                request(app).post('/api/begin-signup').send({ email }).then((res) => {
+                    expect(res.body).to.have.property('token')
+                    expect(res.status).to.equal(200)
                     done()
                 }).catch((err) => done(err))
             })
             it('With an invalid email', function (done) {
-                request(app).post('/api/signup').send({ email: 'whoops', password, clientVerificationURL }).then((res) => {
-                    expect(res.status).to.equal(422)
+                request(app).post('/api/begin-signup').send({ email: 'whoops' }).then((res) => {
                     expect(res.body).to.contain({ code: 'VALIDATION_ERROR' })
+                    expect(res.status).to.equal(422)
                     done()
+                }).catch((err) => done(err))
+            })
+        })
+        describe('/complete-signup POST', function () {
+            it('With valid credentials', function (done) {
+                generateTestUserOTP(email, 'signup').then((data) => {
+                    request(app).post('/api/complete-signup').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                        expect(res.status).to.equal(201)
+                        done()
+                    }).catch((err) => done(err))
+                }).catch((err) => done(err))
+            })
+            it('With an incorrect email', function (done) {
+                generateTestUserOTP(email, 'signup').then((data) => {
+                    request(app).post('/api/complete-signup').send({ email: 'a' + email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                        expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
                 }).catch((err) => done(err))
             })
             it('With an invalid password', function (done) {
-                request(app).post('/api/signup').send({ email, password: '123', clientVerificationURL }).then((res) => {
-                    expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
-                    done()
+                generateTestUserOTP(email, 'signup').then((data) => {
+                    request(app).post('/api/complete-signup').send({ email, password: '123', token: data.fullHash, code: data.otp }).then((res) => {
+                        expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
+                }).catch((err) => done(err))
+            })
+            it('With an incorrect token', function (done) {
+                generateTestUserOTP(email, 'signup').then((data) => {
+                    request(app).post('/api/complete-signup').send({ email, password, token: data.fullHash + 'a', code: data.otp }).then((res) => {
+                        expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
+                }).catch((err) => done(err))
+            })
+            it('With an incorrect code', function (done) {
+                generateTestUserOTP(email, 'signup').then((data) => {
+                    request(app).post('/api/complete-signup').send({ email, password, token: data.fullHash, code: data.otp === '123456' ? '123457' : '123456' }).then((res) => {
+                        expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
                 }).catch((err) => done(err))
             })
         })
     })
 
-    describe('When the DB contains an unverified user', function () {
-        let userData: any = null
-
-        beforeEach('Create test user', function (done) {
-            createTestUser(email, false).then((data) => {
-                userData = data
-                done()
-            }).catch(err => done(err))
-        })
-
-        describe('/signup POST', function () {
-            this.timeout('50000')
-            it('With the same email as the existing unverified user', function (done) {
-                request(app).post('/api/signup').send({ email, password, clientVerificationURL }).then((res) => {
-                    expect(res.status).to.equal(201)
-                    done()
-                }).catch((err) => done(err))
-            })
-        })
-
-        describe('/request-password-reset POST', function () {
-            this.timeout('50000')
-            it('With a valid email', function (done) {
-                request(app).post('/api/request-password-reset').send({ email, clientVerificationURL }).then((res) => {
-                    expect(res.status).to.equal(204)
-                    done()
-                }).catch((err) => done(err))
-            })
-            it('With a non existent user email', function (done) {
-                request(app).post('/api/request-password-reset').send({ email: 'x' + email, clientVerificationURL }).then((res) => {
-                    expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'USER_NOT_FOUND' })
-                    done()
-                }).catch((err) => done(err))
-            })
-        })
-
-        describe('/reset-password POST', function () {
-            it('With a valid token', function (done) {
-                request(app).post('/api/reset-password').send({ passwordResetToken: userData.passwordResetToken, password: password + 'x' }).then((res) => {
-                    expect(res.status).to.equal(204)
-                    done()
-                }).catch((err) => done(err))
-            })
-            it('With an invalid token', function (done) {
-                request(app).post('/api/reset-password').send({ passwordResetToken: userData.passwordResetToken + 'x', password: password + 'x' }).then((res) => {
-                    expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
-                    done()
-                }).catch((err) => done(err))
-            })
-        })
-
-        describe('/verify-email POST', function () {
-            it('With a valid token', function (done) {
-                request(app).post('/api/verify-email').send({ emailVerificationToken: userData.emailVerificationToken }).then((res) => {
-                    expect(res.status).to.equal(204)
-                    done()
-                }).catch((err) => done(err))
-            })
-            it('With an invalid token', function (done) {
-                request(app).post('/api/verify-email').send({ emailVerificationToken: userData.emailVerificationToken + 'x' }).then((res) => {
-                    expect(res.status).to.equal(400)
-                    expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
-                    done()
-                }).catch((err) => done(err))
-            })
-        })
-    })
-
-    describe('When the DB contains a verified user', function () {
-        let userData: any = null
+    describe('When the DB contains a user', function () {
+        let { user, refreshToken }: { user: any, refreshToken: string } = { user: null, refreshToken: '' }
 
         beforeEach('Create test user', function (done) {
             createTestUser(email).then((data) => {
-                userData = data
+                user = data.user
+                refreshToken = data.refreshToken
                 done()
             }).catch(err => done(err))
         })
 
-        describe('/signup POST', function () {
+        describe('/begin-signup POST', function () {
             this.timeout('50000')
-            it('With the same email as the existing verified user', function (done) {
-                request(app).post('/api/signup').send({ email, password, clientVerificationURL }).then((res) => {
-                    expect(res.status).to.equal(400)
+            it('With the same email as the existing user', function (done) {
+                request(app).post('/api/begin-signup').send({ email }).then((res) => {
                     expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
+                    expect(res.status).to.equal(400)
                     done()
+                }).catch((err) => done(err))
+            })
+        })
+
+        describe('/complete-signup POST', function () {
+            it('With the same email as the existing user', function (done) {
+                generateTestUserOTP(email, 'signup').then((data) => {
+                    request(app).post('/api/complete-signup').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                        expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
+                }).catch(err => done(err))
+            })
+        })
+
+        describe('/begin-reset-password POST', function () {
+            this.timeout('50000')
+            it('With a valid email', function (done) {
+                request(app).post('/api/begin-reset-password').send({ email }).then((res) => {
+                    expect(res.body).to.have.property('token')
+                    expect(res.status).to.equal(200)
+                    done()
+                }).catch((err) => done(err))
+            })
+            it('With a non existent email', function (done) {
+                request(app).post('/api/begin-reset-password').send({ email: 'a' + email }).then((res) => {
+                    expect(res.body).to.contain({ code: 'USER_NOT_FOUND' })
+                    expect(res.status).to.equal(400)
+                    done()
+                }).catch((err) => done(err))
+            })
+        })
+        describe('/complete-reset-password POST', function () {
+            it('With valid credentials', function (done) {
+                generateTestUserOTP(email, 'password').then((data) => {
+                    request(app).post('/api/complete-reset-password').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                        expect(res.status).to.equal(200)
+                        done()
+                    }).catch((err) => done(err))
+                }).catch((err) => done(err))
+            })
+            it('With an incorrect email', function (done) {
+                generateTestUserOTP(email, 'password').then((data) => {
+                    request(app).post('/api/complete-reset-password').send({ email: 'a' + email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                        expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
+                }).catch((err) => done(err))
+            })
+            it('With an invalid password', function (done) {
+                generateTestUserOTP(email, 'password').then((data) => {
+                    request(app).post('/api/complete-reset-password').send({ email, password: '123', token: data.fullHash, code: data.otp }).then((res) => {
+                        expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
+                }).catch((err) => done(err))
+            })
+            it('With an incorrect token', function (done) {
+                generateTestUserOTP(email, 'password').then((data) => {
+                    request(app).post('/api/complete-reset-password').send({ email, password, token: data.fullHash + 'a', code: data.otp }).then((res) => {
+                        expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
+                }).catch((err) => done(err))
+            })
+            it('With an incorrect code', function (done) {
+                generateTestUserOTP(email, 'password').then((data) => {
+                    request(app).post('/api/complete-reset-password').send({ email, password, token: data.fullHash, code: data.otp === '123456' ? '123457' : '123456' }).then((res) => {
+                        expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
+                        expect(res.status).to.equal(400)
+                        done()
+                    }).catch((err) => done(err))
                 }).catch((err) => done(err))
             })
         })
@@ -133,19 +180,20 @@ describe('root / tests', function () {
                     const res = await request(app).post('/api/login').send({ email, password })
                     expect(res.body).to.have.property('token')
                     expect(res.body).to.have.property('refreshToken')
+                    expect(res.status).to.equal(200)
                 })().then(() => done()).catch(err => done(err))
             })
             it('With a non existent user email', function (done) {
                 request(app).post('/api/login').send({ email: 'ghost@example.com', password }).then((res) => {
-                    expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
+                    expect(res.status).to.equal(400)
                     done()
                 }).catch((err) => done(err))
             })
             it('With a wrong password', function (done) {
                 request(app).post('/api/login').send({ email, password: password + 'x' }).then((res) => {
-                    expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_LOGIN' })
+                    expect(res.status).to.equal(400)
                     done()
                 }).catch((err) => done(err))
             })
@@ -154,19 +202,19 @@ describe('root / tests', function () {
         describe('/token POST', function () {
             it('With a valid refresh token (also tests refreshToken.date update)', function (done) {
                 (async () => {
-                    const topRefreshToken = async () => ((await findUserById(userData.user.id))?.refreshTokens || [])[0]
+                    const topRefreshToken = async () => ((await findUserById(user.id))?.refreshTokens || [])[0]
                     const initialToken = await topRefreshToken()
                     if (!initialToken) throw null
-                    const res = await request(app).post('/api/token').send({ refreshToken: userData.refreshToken })
-                    expect(res.status).to.equal(200)
+                    const res = await request(app).post('/api/token').send({ refreshToken: refreshToken })
                     expect(res.body).to.have.property('token')
+                    expect(res.status).to.equal(200)
                     if (initialToken.date >= (await topRefreshToken())?.date) throw null
                 })().then(() => done()).catch(err => done(err))
             })
             it('With an invalid refresh token', function (done) {
-                request(app).post('/api/token').send({ refreshToken: userData.refreshToken + 'x' }).then((res) => {
-                    expect(res.status).to.equal(401)
+                request(app).post('/api/token').send({ refreshToken: refreshToken + 'x' }).then((res) => {
                     expect(res.body).to.contain({ code: 'INVALID_REFRESH_TOKEN' })
+                    expect(res.status).to.equal(401)
                     done()
                 }).catch((err) => done(err))
             })
@@ -175,21 +223,23 @@ describe('root / tests', function () {
         describe('/logout POST', function () {
             it('With a valid refresh token', function (done) {
                 (async () => {
-                    const refreshTokenCount = async () => ((await findUserById(userData.user.id))?.refreshTokens || []).length
+                    const refreshTokenCount = async () => ((await findUserById(user.id))?.refreshTokens || []).length
                     let originalCount = await refreshTokenCount()
-                    const res = await request(app).post('/api/logout').set('Authorization', `Bearer ${userData.token}`).send({ refreshToken: userData.refreshToken })
-                    expect(res.status).to.equal(200)
+                    const token = generateTestUserJWT(user.id)
+                    const res = await request(app).post('/api/logout').set('Authorization', `Bearer ${token}`).send({ refreshToken: refreshToken })
                     if (await refreshTokenCount() !== (originalCount - 1)) throw null
+                    expect(res.status).to.equal(200)
                 })().then(() => done()).catch(err => done(err))
             })
             it('With an invalid refresh token', function (done) {
                 (async () => {
-                    const refreshTokenCount = async () => ((await findUserById(userData.user.id))?.refreshTokens || []).length
+                    const refreshTokenCount = async () => ((await findUserById(user.id))?.refreshTokens || []).length
                     let originalCount = await refreshTokenCount()
-                    const res = await request(app).post('/api/logout').set('Authorization', `Bearer ${userData.token}`).send({ refreshToken: userData.refreshToken + 'x' })
-                    expect(res.status).to.equal(400)
+                    const token = generateTestUserJWT(user.id)
+                    const res = await request(app).post('/api/logout').set('Authorization', `Bearer ${token}`).send({ refreshToken: refreshToken + 'x' })
                     expect(res.body).to.contain({ code: 'ITEM_NOT_FOUND' })
                     if (await refreshTokenCount() !== originalCount) throw null
+                    expect(res.status).to.equal(400)
                 })().then(() => done()).catch(err => done(err))
             })
         })
