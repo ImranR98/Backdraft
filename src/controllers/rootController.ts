@@ -10,7 +10,7 @@ export class RootController extends Controller {
 
     /** Begin the signup process by sending a verification code to the user's email and returning an associated token. */
     @SuccessResponse('200', 'Verification email sent and associated token generated')
-    @Post('begin-signup')
+    @Post('signup/begin')
     public async beginSignup(
         @Body() { email }: {
             /** The new user's email */
@@ -23,7 +23,7 @@ export class RootController extends Controller {
 
     /** Complete a user's signup by verifying that the provided verification code matches the email and token*/
     @SuccessResponse('201', 'Sign up complete')
-    @Post('complete-signup')
+    @Post('signup/complete')
     public async completeSignup(
         @Body() { email, password, token, code }: {
             /** The new user's email */
@@ -42,7 +42,7 @@ export class RootController extends Controller {
 
     /** Begin the password reset process by sending a verification code to the user's email and returning an associated token. */
     @SuccessResponse('200', 'Reset email sent and associated token generated')
-    @Post('begin-reset-password')
+    @Post('reset-password-begin')
     public async beginResetPassword(
         @Body() { email }: {
             /** The user's email */
@@ -55,7 +55,7 @@ export class RootController extends Controller {
 
     /** Complete a user's password reset by verifying that the provided verification code matches the email and token*/
     @SuccessResponse('200', 'Password reset')
-    @Post('complete-reset-password')
+    @Post('reset-password-complete')
     public async completeResetPassword(
         @Body() { email, password, token, code }: {
             /** The user's email */

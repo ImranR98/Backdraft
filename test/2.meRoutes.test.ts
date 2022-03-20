@@ -92,31 +92,31 @@ describe('/me tests', function () {
         })
     })
 
-    describe('/me/begin-change-email POST', function () {
+    describe('/me/email/begin-change POST', function () {
         this.timeout('50000')
         it('With a valid new email', function (done) {
-            request(app).post('/api/me/begin-change-email').set('Authorization', `Bearer ${token}`).send({ email: newEmail, password }).then((res) => {
+            request(app).post('/api/me/email/begin-change').set('Authorization', `Bearer ${token}`).send({ email: newEmail, password }).then((res) => {
                 expect(res.status).to.equal(200)
                 expect(res.body).to.have.property('token')
                 done()
             }).catch((err) => done(err))
         })
         it('With the same email as before', function (done) {
-            request(app).post('/api/me/begin-change-email').set('Authorization', `Bearer ${token}`).send({ email, password }).then((res) => {
+            request(app).post('/api/me/email/begin-change').set('Authorization', `Bearer ${token}`).send({ email, password }).then((res) => {
                 expect(res.status).to.equal(400)
                 expect(res.body).to.contain({ code: 'EMAIL_ALREADY_SET' })
                 done()
             }).catch((err) => done(err))
         })
         it('With an invalid email', function (done) {
-            request(app).post('/api/me/begin-change-email').set('Authorization', `Bearer ${token}`).send({ email: 'whoops', password }).then((res) => {
+            request(app).post('/api/me/email/begin-change').set('Authorization', `Bearer ${token}`).send({ email: 'whoops', password }).then((res) => {
                 expect(res.status).to.equal(422)
                 expect(res.body).to.contain({ code: 'VALIDATION_ERROR' })
                 done()
             }).catch((err) => done(err))
         })
         it('With an incorrect password', function (done) {
-            request(app).post('/api/me/begin-change-email').set('Authorization', `Bearer ${token}`).send({ email: newEmail, password: newPassword }).then((res) => {
+            request(app).post('/api/me/email/begin-change').set('Authorization', `Bearer ${token}`).send({ email: newEmail, password: newPassword }).then((res) => {
                 expect(res.status).to.equal(400)
                 expect(res.body).to.contain({ code: 'WRONG_PASSWORD' })
                 done()
@@ -124,10 +124,10 @@ describe('/me tests', function () {
         })
     })
 
-    describe('/me/complete-change-email POST', function () {
+    describe('/me/email/complete-change POST', function () {
         it('With valid credentials', function (done) {
             generateTestUserOTP(newEmail, 'email', user.id.toString()).then((data) => {
-                request(app).post('/api/me/complete-change-email').set('Authorization', `Bearer ${token}`).send({ email: newEmail, token: data.fullHash, code: data.otp }).then((res) => {
+                request(app).post('/api/me/email/complete-change').set('Authorization', `Bearer ${token}`).send({ email: newEmail, token: data.fullHash, code: data.otp }).then((res) => {
                     expect(res.status).to.equal(204)
                     done()
                 }).catch((err) => done(err))
@@ -135,7 +135,7 @@ describe('/me tests', function () {
         })
         it('With an incorrect email', function (done) {
             generateTestUserOTP('x' + newEmail, 'email', user.id.toString()).then((data) => {
-                request(app).post('/api/me/complete-change-email').set('Authorization', `Bearer ${token}`).send({ email: 'b' + email, token: data.fullHash, code: data.otp }).then((res) => {
+                request(app).post('/api/me/email/complete-change').set('Authorization', `Bearer ${token}`).send({ email: 'b' + email, token: data.fullHash, code: data.otp }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                     done()
@@ -144,7 +144,7 @@ describe('/me tests', function () {
         })
         it('With an incorrect token', function (done) {
             generateTestUserOTP(newEmail, 'email', user.id.toString()).then((data) => {
-                request(app).post('/api/me/complete-change-email').set('Authorization', `Bearer ${token}`).send({ email, token: data.fullHash + 'a', code: data.otp }).then((res) => {
+                request(app).post('/api/me/email/complete-change').set('Authorization', `Bearer ${token}`).send({ email, token: data.fullHash + 'a', code: data.otp }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                     done()
@@ -153,7 +153,7 @@ describe('/me tests', function () {
         })
         it('With an incorrect code', function (done) {
             generateTestUserOTP(newEmail, 'email', user.id.toString()).then((data) => {
-                request(app).post('/api/me/complete-change-email').set('Authorization', `Bearer ${token}`).send({ email, token: data.fullHash, code: data.otp === '123456' ? '123457' : '123456' }).then((res) => {
+                request(app).post('/api/me/email/complete-change').set('Authorization', `Bearer ${token}`).send({ email, token: data.fullHash, code: data.otp === '123456' ? '123457' : '123456' }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                     done()
@@ -171,10 +171,10 @@ describe('/me tests', function () {
             }).catch(err => done(err))
         })
 
-        describe('/me/begin-change-email POST', function () {
+        describe('/me/email/begin-change POST', function () {
             this.timeout('50000')
             it('With the same email as an existing user', function (done) {
-                request(app).post('/api/me/begin-change-email').set('Authorization', `Bearer ${token}`).send({ email: 'x' + email, password }).then((res) => {
+                request(app).post('/api/me/email/begin-change').set('Authorization', `Bearer ${token}`).send({ email: 'x' + email, password }).then((res) => {
                     expect(res.status).to.equal(400)
                     expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
                     done()

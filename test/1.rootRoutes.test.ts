@@ -11,27 +11,27 @@ import { password, email, createTestUser, generateTestUserOTP, generateTestUserJ
 
 describe('root / tests', function () {
     describe('When the DB is empty', function () {
-        describe('/begin-signup POST', function () {
+        describe('/signup/begin POST', function () {
             this.timeout('50000')
             it('With a valid email', function (done) {
-                request(app).post('/api/begin-signup').send({ email }).then((res) => {
+                request(app).post('/api/signup/begin').send({ email }).then((res) => {
                     expect(res.body).to.have.property('token')
                     expect(res.status).to.equal(200)
                     done()
                 }).catch((err) => done(err))
             })
             it('With an invalid email', function (done) {
-                request(app).post('/api/begin-signup').send({ email: 'whoops' }).then((res) => {
+                request(app).post('/api/signup/begin').send({ email: 'whoops' }).then((res) => {
                     expect(res.body).to.contain({ code: 'VALIDATION_ERROR' })
                     expect(res.status).to.equal(422)
                     done()
                 }).catch((err) => done(err))
             })
         })
-        describe('/complete-signup POST', function () {
+        describe('/signup/complete POST', function () {
             it('With valid credentials', function (done) {
                 generateTestUserOTP(email, 'signup').then((data) => {
-                    request(app).post('/api/complete-signup').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                    request(app).post('/api/signup/complete').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
                         expect(res.status).to.equal(201)
                         done()
                     }).catch((err) => done(err))
@@ -39,7 +39,7 @@ describe('root / tests', function () {
             })
             it('With an incorrect email', function (done) {
                 generateTestUserOTP(email, 'signup').then((data) => {
-                    request(app).post('/api/complete-signup').send({ email: 'a' + email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                    request(app).post('/api/signup/complete').send({ email: 'a' + email, password, token: data.fullHash, code: data.otp }).then((res) => {
                         expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                         expect(res.status).to.equal(400)
                         done()
@@ -48,7 +48,7 @@ describe('root / tests', function () {
             })
             it('With an invalid password', function (done) {
                 generateTestUserOTP(email, 'signup').then((data) => {
-                    request(app).post('/api/complete-signup').send({ email, password: '123', token: data.fullHash, code: data.otp }).then((res) => {
+                    request(app).post('/api/signup/complete').send({ email, password: '123', token: data.fullHash, code: data.otp }).then((res) => {
                         expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
                         expect(res.status).to.equal(400)
                         done()
@@ -57,7 +57,7 @@ describe('root / tests', function () {
             })
             it('With an incorrect token', function (done) {
                 generateTestUserOTP(email, 'signup').then((data) => {
-                    request(app).post('/api/complete-signup').send({ email, password, token: data.fullHash + 'a', code: data.otp }).then((res) => {
+                    request(app).post('/api/signup/complete').send({ email, password, token: data.fullHash + 'a', code: data.otp }).then((res) => {
                         expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                         expect(res.status).to.equal(400)
                         done()
@@ -66,7 +66,7 @@ describe('root / tests', function () {
             })
             it('With an incorrect code', function (done) {
                 generateTestUserOTP(email, 'signup').then((data) => {
-                    request(app).post('/api/complete-signup').send({ email, password, token: data.fullHash, code: data.otp === '123456' ? '123457' : '123456' }).then((res) => {
+                    request(app).post('/api/signup/complete').send({ email, password, token: data.fullHash, code: data.otp === '123456' ? '123457' : '123456' }).then((res) => {
                         expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                         expect(res.status).to.equal(400)
                         done()
@@ -87,10 +87,10 @@ describe('root / tests', function () {
             }).catch(err => done(err))
         })
 
-        describe('/begin-signup POST', function () {
+        describe('/signup/begin POST', function () {
             this.timeout('50000')
             it('With the same email as the existing user', function (done) {
-                request(app).post('/api/begin-signup').send({ email }).then((res) => {
+                request(app).post('/api/signup/begin').send({ email }).then((res) => {
                     expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
                     expect(res.status).to.equal(400)
                     done()
@@ -98,10 +98,10 @@ describe('root / tests', function () {
             })
         })
 
-        describe('/complete-signup POST', function () {
+        describe('/signup/complete POST', function () {
             it('With the same email as the existing user', function (done) {
                 generateTestUserOTP(email, 'signup').then((data) => {
-                    request(app).post('/api/complete-signup').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                    request(app).post('/api/signup/complete').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
                         expect(res.body).to.contain({ code: 'EMAIL_IN_USE' })
                         expect(res.status).to.equal(400)
                         done()
@@ -110,27 +110,27 @@ describe('root / tests', function () {
             })
         })
 
-        describe('/begin-reset-password POST', function () {
+        describe('/reset-password-begin POST', function () {
             this.timeout('50000')
             it('With a valid email', function (done) {
-                request(app).post('/api/begin-reset-password').send({ email }).then((res) => {
+                request(app).post('/api/reset-password-begin').send({ email }).then((res) => {
                     expect(res.body).to.have.property('token')
                     expect(res.status).to.equal(200)
                     done()
                 }).catch((err) => done(err))
             })
             it('With a non existent email', function (done) {
-                request(app).post('/api/begin-reset-password').send({ email: 'a' + email }).then((res) => {
+                request(app).post('/api/reset-password-begin').send({ email: 'a' + email }).then((res) => {
                     expect(res.body).to.contain({ code: 'USER_NOT_FOUND' })
                     expect(res.status).to.equal(400)
                     done()
                 }).catch((err) => done(err))
             })
         })
-        describe('/complete-reset-password POST', function () {
+        describe('/reset-password-complete POST', function () {
             it('With valid credentials', function (done) {
                 generateTestUserOTP(email, 'password').then((data) => {
-                    request(app).post('/api/complete-reset-password').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                    request(app).post('/api/reset-password-complete').send({ email, password, token: data.fullHash, code: data.otp }).then((res) => {
                         expect(res.status).to.equal(200)
                         done()
                     }).catch((err) => done(err))
@@ -138,7 +138,7 @@ describe('root / tests', function () {
             })
             it('With an incorrect email', function (done) {
                 generateTestUserOTP(email, 'password').then((data) => {
-                    request(app).post('/api/complete-reset-password').send({ email: 'a' + email, password, token: data.fullHash, code: data.otp }).then((res) => {
+                    request(app).post('/api/reset-password-complete').send({ email: 'a' + email, password, token: data.fullHash, code: data.otp }).then((res) => {
                         expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                         expect(res.status).to.equal(400)
                         done()
@@ -147,7 +147,7 @@ describe('root / tests', function () {
             })
             it('With an invalid password', function (done) {
                 generateTestUserOTP(email, 'password').then((data) => {
-                    request(app).post('/api/complete-reset-password').send({ email, password: '123', token: data.fullHash, code: data.otp }).then((res) => {
+                    request(app).post('/api/reset-password-complete').send({ email, password: '123', token: data.fullHash, code: data.otp }).then((res) => {
                         expect(res.body).to.contain({ code: 'INVALID_PASSWORD' })
                         expect(res.status).to.equal(400)
                         done()
@@ -156,7 +156,7 @@ describe('root / tests', function () {
             })
             it('With an incorrect token', function (done) {
                 generateTestUserOTP(email, 'password').then((data) => {
-                    request(app).post('/api/complete-reset-password').send({ email, password, token: data.fullHash + 'a', code: data.otp }).then((res) => {
+                    request(app).post('/api/reset-password-complete').send({ email, password, token: data.fullHash + 'a', code: data.otp }).then((res) => {
                         expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                         expect(res.status).to.equal(400)
                         done()
@@ -165,7 +165,7 @@ describe('root / tests', function () {
             })
             it('With an incorrect code', function (done) {
                 generateTestUserOTP(email, 'password').then((data) => {
-                    request(app).post('/api/complete-reset-password').send({ email, password, token: data.fullHash, code: data.otp === '123456' ? '123457' : '123456' }).then((res) => {
+                    request(app).post('/api/reset-password-complete').send({ email, password, token: data.fullHash, code: data.otp === '123456' ? '123457' : '123456' }).then((res) => {
                         expect(res.body).to.contain({ code: 'INVALID_TOKEN' })
                         expect(res.status).to.equal(400)
                         done()

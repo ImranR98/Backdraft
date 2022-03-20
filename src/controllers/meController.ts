@@ -53,7 +53,7 @@ export class MeController extends Controller {
 
     /** Begin the email change process by sending a verification code to the user's new email and returning an associated token. */
     @SuccessResponse('200', 'Verification email sent and associated token generated')
-    @Post('begin-change-email')
+    @Post('email/begin-change')
     public async beginChangeEmail(
         @Body() { email, password }: {
             /** The user's password */
@@ -69,7 +69,7 @@ export class MeController extends Controller {
 
     /** Complete a user's signup by verifying that the provided verification code matches the email and token*/
     @SuccessResponse('204', 'Sign up complete')
-    @Post('complete-change-email')
+    @Post('email/complete-change')
     public async completeChangeEmail(
         @Body() { email, token, code }: {
             /** The user's new email */
