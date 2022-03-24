@@ -18,7 +18,6 @@ export class userService {
         const returnedUser: ClientUserInterface = {
             id: user.id,
             email: user.email,
-            verified: user.verified,
             refreshTokens: clientLogins
         }
         return returnedUser

@@ -23,7 +23,6 @@ model RefreshToken {
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
-  verified      Boolean  @default(false)
   password      String
   refreshTokens RefreshToken[]
 }

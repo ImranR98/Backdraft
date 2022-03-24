@@ -8,34 +8,68 @@ import { authService } from '../services/authService'
 @Response<ClientErrorInterface>('5XX', 'Server Error')
 export class RootController extends Controller {
 
-    /** Create a new user and begin email verification. */
-    @SuccessResponse('201', 'Verification email sent')
-    @Post('signup')
-    public async signup(
-        @Body() { email, password, clientVerificationURL }: {
+    /** Begin the signup process by sending a verification code to the user's email and returning an associated token. */
+    @SuccessResponse('200', 'Verification email sent and associated token generated')
+    @Post('signup/begin')
+    public async beginSignup(
+        @Body() { email }: {
             /** The new user's email */
-            email: string,
-            /** The new user's password */
-            password: string,
-            /** The client application URL that the verification email will link the user to (with their email verification token as a query param) */
-            clientVerificationURL: string
+            email: string
         },
-    ): Promise<void> {
-        this.setStatus(201)
-        await new authService().signup(email, password, clientVerificationURL)
+    ): Promise<{ token: string }> {
+        this.setStatus(200)
+        return new authService().beginSignup(email)
     }
 
-    /** Complete an unverified user's email verification. */
-    @SuccessResponse('204', 'Email verified')
-    @Post('verify-email')
-    public async verifyEmail(
-        @Body() { emailVerificationToken }: {
-            /** The email verification token received by the user */
-            emailVerificationToken: string
+    /** Complete a user's signup by verifying that the provided verification code matches the email and token*/
+    @SuccessResponse('201', 'Sign up complete')
+    @Post('signup/complete')
+    public async completeSignup(
+        @Body() { email, password, token, code }: {
+            /** The new user's email */
+            email: string
+            /** The new user's password */
+            password: string
+            /** The token generated when the user began the sign up process */
+            token: string
+            /** The email verification code received by the user */
+            code: string
         }
     ): Promise<void> {
-        this.setStatus(204)
-        await new authService().verifyEmail(emailVerificationToken)
+        this.setStatus(201)
+        await new authService().completeSignup(email, password, token, code)
+    }
+
+    /** Begin the password reset process by sending a verification code to the user's email and returning an associated token. */
+    @SuccessResponse('200', 'Reset email sent and associated token generated')
+    @Post('reset-password-begin')
+    public async beginResetPassword(
+        @Body() { email }: {
+            /** The user's email */
+            email: string
+        },
+    ): Promise<{ token: string }> {
+        this.setStatus(200)
+        return new authService().beginResetPassword(email)
+    }
+
+    /** Complete a user's password reset by verifying that the provided verification code matches the email and token*/
+    @SuccessResponse('200', 'Password reset')
+    @Post('reset-password-complete')
+    public async completeResetPassword(
+        @Body() { email, password, token, code }: {
+            /** The user's email */
+            email: string
+            /** The user's new password */
+            password: string
+            /** The token generated when the user began the password reset process */
+            token: string
+            /** The password reset code received by the user */
+            code: string
+        }
+    ): Promise<void> {
+        this.setStatus(200)
+        await new authService().completeResetPassword(email, password, token, code)
     }
 
     /** Generate an access token for a user who has provided valid credentials. */
@@ -83,36 +117,6 @@ export class RootController extends Controller {
     ): Promise<{ token: string }> {
         this.setStatus(200)
         return await new authService().getAccessToken(refreshToken, req.ip, userAgent || '')
-    }
-
-    /** Generate a password reset token for a user, and send them a reset email. */
-    @SuccessResponse('204', 'Reset email sent')
-    @Post('request-password-reset')
-    public async requestPasswordReset(
-        @Body() { email, clientVerificationURL }: {
-            /** The user's email */
-            email: string,
-            /** The client application URL that the reset email will link the user to (with their password reset token as a query param) */
-            clientVerificationURL: string
-        },
-    ): Promise<void> {
-        this.setStatus(204)
-        await new authService().beginPasswordReset(email, clientVerificationURL)
-    }
-
-    /** Complete a user's password reset. */
-    @SuccessResponse('204', 'Password changed')
-    @Post('reset-password')
-    public async resetPassword(
-        @Body() { passwordResetToken, password }: {
-            /** The password reset token received by the user */
-            passwordResetToken: string,
-            /** The user's new password */
-            password: string
-        },
-    ): Promise<void> {
-        this.setStatus(204)
-        await new authService().resetPassword(passwordResetToken, password)
     }
 
 }

@@ -7,22 +7,21 @@ declare global {
     interface ProcessEnv {
       NODE_ENV: 'development' | 'production' | 'test'
       JWT_AUTH_KEY: string
-      JWT_EMAIL_VERIFICATION_KEY: string
+      GENERAL_VERIFICATION_KEY: string
       DATABASE_URL: string
       SENDER_EMAIL: string
       STRINGIFIED_NODEMAILER_OPTIONS_JSON: string
       REFRESH_TOKEN_CLEANUP_1_DAYS: string
       REFRESH_TOKEN_CLEANUP_2_DAYS: string
       ACCESS_TOKEN_DURATION_MINUTES: string
-      EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES: string
-      PASSWORD_RESET_TOKEN_DURATION_MINUTES: string
+      OTP_DURATION_MINUTES: string
     }
   }
 }
 
 // Validate and parse the environment variables as defined in the process.env interface declared above
 export const ensureEnvVars = () => {
-  ['NODE_ENV', 'JWT_AUTH_KEY', 'JWT_EMAIL_VERIFICATION_KEY', 'DATABASE_URL', 'SENDER_EMAIL'].forEach(ev => ensureNonEmptyString(process.env[ev], ev))
+  ['NODE_ENV', 'JWT_AUTH_KEY', 'GENERAL_VERIFICATION_KEY', 'DATABASE_URL', 'SENDER_EMAIL'].forEach(ev => ensureNonEmptyString(process.env[ev], ev))
 
   if (!(process.env['NODE_ENV'] === 'production' || process.env['NODE_ENV'] === 'development' || process.env['NODE_ENV'] === 'test'))
     throw new Error('process.env.NODE_ENV must be either \'production\', \'development\', or \'test\'')
@@ -32,8 +31,7 @@ export const ensureEnvVars = () => {
   process.env.REFRESH_TOKEN_CLEANUP_1_DAYS = parsePositiveNum(process.env['REFRESH_TOKEN_CLEANUP_1_DAYS'], 'REFRESH_TOKEN_CLEANUP_1_DAYS')
   process.env.REFRESH_TOKEN_CLEANUP_2_DAYS = parsePositiveNum(process.env['REFRESH_TOKEN_CLEANUP_2_DAYS'], 'REFRESH_TOKEN_CLEANUP_2_DAYS')
   process.env.ACCESS_TOKEN_DURATION_MINUTES = parsePositiveNum(process.env['ACCESS_TOKEN_DURATION_MINUTES'], 'ACCESS_TOKEN_DURATION_MINUTES')
-  process.env.EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES = parsePositiveNum(process.env['EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES'], 'EMAIL_VERIFICATION_TOKEN_DURATION_MINUTES')
-  process.env.PASSWORD_RESET_TOKEN_DURATION_MINUTES = parsePositiveNum(process.env['PASSWORD_RESET_TOKEN_DURATION_MINUTES'], 'PASSWORD_RESET_TOKEN_DURATION_MINUTES')
+  process.env.OTP_DURATION_MINUTES = parsePositiveNum(process.env['OTP_DURATION_MINUTES'], 'OTP_DURATION_MINUTES')
 }
 
 // Validation helpers used above
