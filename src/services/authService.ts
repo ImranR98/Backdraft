@@ -50,8 +50,8 @@ export class authService {
     public async beginSignup(email: string) {
         await this.ensureEmail(email)
         if (await findUserByEmail(email)) throw new PresentableError('EMAIL_IN_USE')
-        const verificationData = generateOTPAndHash(email, 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
-        await this.sendOTPEmail(email + '.signup', verificationData.otp, process.env.OTP_DURATION_MINUTES, 'Email Verification Code')
+        const verificationData = generateOTPAndHash(email + '.signup', 6, Number.parseFloat(process.env.OTP_DURATION_MINUTES), process.env.GENERAL_VERIFICATION_KEY)
+        await this.sendOTPEmail(email, verificationData.otp, process.env.OTP_DURATION_MINUTES, 'Email Verification Code')
         return { token: verificationData.fullHash }
     }
     /** Verifies the provided hash and OTP with the provided email, then creates a new user with the provided email and password */
