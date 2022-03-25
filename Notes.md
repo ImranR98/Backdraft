@@ -1,6 +1,4 @@
-# Concerns
-
-## Refresh Token Cleanup Policy
+# Refresh Token Cleanup Policy Concern
 
 When a user logs out, it deletes its refresh token and also sends a request to the server to destroy the server copy of that refresh token (since it won't be used again). But a log out is not the only way a user might lose a refresh token; this could also happen due to a change in browsers or devices (factory reset, loss, etc.) and when this happens the server retains its copy of the refresh token. Over time, this would lead to many 'dead' refresh tokens building up in the DB. To avoid this, refresh tokens that have not been used for a long time should be cleaned up automatically. But when and how is this appropriate? The point of refresh tokens is that they last forever, so a clean up policy would involve a trade-off between expected behaviour and practical needs.
 
@@ -23,6 +21,3 @@ Is this the best way? Does it make sense to treat tokens differently based on IP
 4. If a logged in user wants, they can take a look at their refresh tokens (not the tokens themselves, but some associated data such as device or IP) and choose to revoke the token.
 5. Older tokens are automatically revoked in accordance with some policy based on token usage. Prevents buildup of 'dead' tokens in the database.
 6. User can reset their password. This optionally revokes all refresh tokens.
-
-# Possible Improvements
-- Tests are not clearly structured, have a lot of repetition, use `.then()`/`.catch()` instead of `async`/`await`, and have some shortcuts for generating JWTs and OTPs for test users (since the OTP sent to the test email can't be easily retreived). All this could be fixed.
