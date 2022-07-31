@@ -13,4 +13,4 @@ const startServer = async () => {
 }
 
 
-startServer().catch((err) => logger.error(err))
+startServer().catch((err) => console.error(err))
