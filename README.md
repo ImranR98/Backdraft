@@ -32,7 +32,8 @@ This project helps avoid such issues by providing a solid foundation that includ
 1. Use `npm i` to install required dependencies.
 2. Create a copy of `template.env`, rename it to `.env`, and fill in the appropriate details for your development environment, as described in that file. Refer to the `dotenv` [documentation](https://www.npmjs.com/package/dotenv) for details on how this works. Rename `template.test.env` to `.test.env` and repeat the process for your test environment - this usually involves defining a separate database to run tests on. Any variables not defined in `.test.env` will fall back to the values in `.env`. It is assumed that you will not use a `.env` file to set environment variables in production.
 3. Ensure the development and test databases (as were defined in the `.env` files) are running and reachable, along with the production database when needed.
-4. Test the project, build it for production, or run it in a development environment using the scripts defined in `package.json`.
+4. Make sure the database schema is in sync with the database by running `npx prisma migrate dev`. If the database is new, this will create the necessary tables.
+5. Test the project, build it for production, or run it in a development environment using the scripts defined in `package.json`.
 
 By default, all endpoints are located in `/api`, and the Swagger UI endpoint is `/api/docs`.
 
